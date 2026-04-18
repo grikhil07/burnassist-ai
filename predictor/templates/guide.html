@@ -1,0 +1,719 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+
+  /* ===== HERO ===== */
+  .guide-hero {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  .page-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(230,57,70,0.1);
+    color: var(--primary);
+    border: 1px solid rgba(230,57,70,0.22);
+    border-radius: 50px;
+    padding: 0.32rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .guide-hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .guide-hero h1 .highlight {
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .guide-hero p { color: var(--muted); font-size: 1rem; line-height: 1.65; }
+
+  .who-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0,119,200,0.08);
+    color: #0077c8;
+    border: 1px solid rgba(0,119,200,0.2);
+    border-radius: 8px;
+    padding: 0.45rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-top: 1rem;
+  }
+
+  body.dark-mode .who-badge {
+    color: #4db8ff;
+    background: rgba(77,184,255,0.08);
+    border-color: rgba(77,184,255,0.2);
+  }
+
+  /* ===== DEGREE CARDS ===== */
+  .degree-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin: 2.5rem 0;
+  }
+
+  @media (max-width: 991px) { .degree-grid { grid-template-columns: 1fr; } }
+  @media (min-width: 768px) and (max-width: 991px) { .degree-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .degree-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+
+  .degree-card:hover { transform: translateY(-5px); box-shadow: 0 16px 48px rgba(0,0,0,0.1); }
+
+  .card-accent { height: 5px; width: 100%; }
+  .degree-card.first  .card-accent { background: linear-gradient(90deg, #28c878, #5de096); }
+  .degree-card.second .card-accent { background: linear-gradient(90deg, #ff9f1c, #ffbf5e); }
+  .degree-card.third  .card-accent { background: linear-gradient(90deg, #e63946, #ff6b77); }
+
+  .card-head {
+    padding: 1.4rem 1.5rem 0.9rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .degree-icon {
+    width: 48px; height: 48px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .degree-card.first  .degree-icon { background: rgba(40,200,120,0.12);  border: 1px solid rgba(40,200,120,0.2); }
+  .degree-card.second .degree-icon { background: rgba(255,159,28,0.12);  border: 1px solid rgba(255,159,28,0.2); }
+  .degree-card.third  .degree-icon { background: rgba(230,57,70,0.12);   border: 1px solid rgba(230,57,70,0.2); }
+
+  .card-head-text { flex: 1; }
+
+  .card-head-text h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+
+  .severity-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.18rem 0.6rem;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .degree-card.first  .severity-pill { background: rgba(40,200,120,0.12);  color: #28c878; }
+  .degree-card.second .severity-pill { background: rgba(255,159,28,0.12);  color: #ff9f1c; }
+  .degree-card.third  .severity-pill { background: rgba(230,57,70,0.12);   color: var(--primary); }
+
+  /* ===== SPEAKER BUTTON ===== */
+  .speak-btn {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    font-size: 0.95rem;
+    color: var(--muted);
+    position: relative;
+  }
+
+  .speak-btn:hover {
+    transform: scale(1.1);
+  }
+
+  .degree-card.first  .speak-btn:hover { background: rgba(40,200,120,0.12);  border-color: rgba(40,200,120,0.3);  color: #28c878; }
+  .degree-card.second .speak-btn:hover { background: rgba(255,159,28,0.12);  border-color: rgba(255,159,28,0.3);  color: #ff9f1c; }
+  .degree-card.third  .speak-btn:hover { background: rgba(230,57,70,0.12);   border-color: rgba(230,57,70,0.3);   color: #e63946; }
+
+  /* Speaking state */
+  .speak-btn.speaking {
+    animation: speaker-pulse 1s ease-in-out infinite;
+  }
+
+  .degree-card.first  .speak-btn.speaking { background: rgba(40,200,120,0.15);  border-color: #28c878; color: #28c878; }
+  .degree-card.second .speak-btn.speaking { background: rgba(255,159,28,0.15);  border-color: #ff9f1c; color: #ff9f1c; }
+  .degree-card.third  .speak-btn.speaking { background: rgba(230,57,70,0.15);   border-color: #e63946; color: #e63946; }
+
+  @keyframes speaker-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(230,57,70,0.3); }
+    50%      { box-shadow: 0 0 0 6px rgba(230,57,70,0); }
+  }
+
+  .degree-card.first .speak-btn.speaking  { animation: pulse-green 1s ease-in-out infinite; }
+  .degree-card.second .speak-btn.speaking { animation: pulse-amber 1s ease-in-out infinite; }
+  .degree-card.third .speak-btn.speaking  { animation: pulse-red   1s ease-in-out infinite; }
+
+  @keyframes pulse-green { 0%,100%{box-shadow:0 0 0 0 rgba(40,200,120,0.4)} 50%{box-shadow:0 0 0 7px rgba(40,200,120,0)} }
+  @keyframes pulse-amber { 0%,100%{box-shadow:0 0 0 0 rgba(255,159,28,0.4)} 50%{box-shadow:0 0 0 7px rgba(255,159,28,0)} }
+  @keyframes pulse-red   { 0%,100%{box-shadow:0 0 0 0 rgba(230,57,70,0.4)}  50%{box-shadow:0 0 0 7px rgba(230,57,70,0)} }
+
+  /* Tooltip on speak button */
+  .speak-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .speak-btn:hover::after { opacity: 1; }
+
+  /* ===== REST OF CARD STYLES ===== */
+  .card-divider { height: 1px; background: var(--border); margin: 0 1.5rem; }
+
+  .card-body-inner {
+    padding: 1.25rem 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .section-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .section-label i { font-size: 0.75rem; }
+
+  .degree-card.first  .section-label.primary { color: #28c878; }
+  .degree-card.second .section-label.primary { color: #ff9f1c; }
+  .degree-card.third  .section-label.primary { color: var(--primary); }
+
+  .step-list {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+
+  .step-list li {
+    display: flex; align-items: flex-start; gap: 0.65rem;
+    font-size: 0.86rem; color: var(--text); line-height: 1.5;
+  }
+
+  .step-num {
+    width: 20px; height: 20px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+
+  .degree-card.first  .step-num { background: rgba(40,200,120,0.15);  color: #28c878; }
+  .degree-card.second .step-num { background: rgba(255,159,28,0.15);  color: #ff9f1c; }
+  .degree-card.third  .step-num { background: rgba(230,57,70,0.15);   color: var(--primary); }
+
+  .symptom-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .symptom-chip {
+    font-size: 0.74rem; padding: 0.22rem 0.65rem; border-radius: 20px;
+    border: 1px solid var(--border); color: var(--muted); background: var(--bg3);
+  }
+
+  .avoid-row {
+    background: rgba(230,57,70,0.05);
+    border: 1px solid rgba(230,57,70,0.12);
+    border-radius: 10px; padding: 0.75rem;
+  }
+
+  .avoid-row li { color: var(--muted); font-size: 0.82rem; }
+  .avoid-row .step-num { background: rgba(230,57,70,0.1); color: var(--primary); }
+
+  .card-foot {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg3);
+    font-size: 0.78rem; color: var(--muted);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  .degree-card.third .card-foot {
+    background: rgba(230,57,70,0.05);
+    color: var(--primary);
+    border-color: rgba(230,57,70,0.12);
+    font-weight: 600;
+  }
+
+  /* ===== SAFETY SECTION ===== */
+  .safety-section { margin: 0.5rem 0 2rem; }
+
+  .safety-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; }
+
+  .safety-header h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0;
+  }
+
+  .safety-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.85rem; }
+
+  .safety-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.1rem;
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    transition: border-color 0.2s;
+  }
+
+  .safety-item:hover { border-color: rgba(255,159,28,0.35); }
+  .safety-item i { font-size: 1.1rem; color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+  .safety-item p { font-size: 0.86rem; color: var(--text); margin: 0; line-height: 1.5; }
+  .safety-item span { font-weight: 600; display: block; margin-bottom: 0.1rem; font-size: 0.82rem; }
+
+  .who-info {
+    background: rgba(0,119,200,0.05);
+    border: 1px solid rgba(0,119,200,0.15);
+    border-radius: 16px; padding: 1.25rem 1.5rem; margin-top: 1.5rem;
+    display: flex; align-items: flex-start; gap: 1rem;
+  }
+
+  body.dark-mode .who-info { background: rgba(77,184,255,0.05); border-color: rgba(77,184,255,0.15); }
+  .who-info i { font-size: 1.4rem; color: #0077c8; flex-shrink: 0; margin-top: 2px; }
+  body.dark-mode .who-info i { color: #4db8ff; }
+
+  .who-info h6 {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    color: #0077c8; font-size: 0.9rem; margin-bottom: 0.4rem;
+  }
+
+  body.dark-mode .who-info h6 { color: #4db8ff; }
+  .who-info p { font-size: 0.83rem; color: var(--muted); margin: 0; line-height: 1.6; }
+
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700;
+    color: var(--text); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;
+  }
+
+</style>
+
+<!-- ===== HERO ===== -->
+<div class="guide-hero fade-in-up">
+  <div class="page-badge"><i class="bi bi-journal-medical"></i> First Aid Reference</div>
+  <h1>Burn <span class="highlight">First Aid</span> Guide</h1>
+  <p>Immediate care steps before professional medical treatment, based on clinical and WHO guidelines.</p>
+  <div class="who-badge">
+    <i class="bi bi-patch-check-fill"></i> Content aligned with WHO Burn Prevention &amp; Care guidelines
+  </div>
+</div>
+
+<!-- ===== DEGREE CARDS ===== -->
+<div class="degree-grid fade-in-up delay-1">
+
+  <!-- ====== FIRST DEGREE ====== -->
+  <div class="degree-card first">
+    <div class="card-accent"></div>
+    <div class="card-head">
+      <div class="degree-icon">🟢</div>
+      <div class="card-head-text">
+        <h3>First-Degree Burn</h3>
+        <span class="severity-pill">Superficial</span>
+      </div>
+      <!-- SPEAKER BUTTON -->
+      <button class="speak-btn" id="speakBtn1"
+              data-tooltip="Read First Aid aloud"
+              onclick="speakGuide('first')">
+        <i class="bi bi-volume-up-fill" id="speakIcon1"></i>
+      </button>
+    </div>
+    <div class="card-divider"></div>
+
+    <div class="card-body-inner">
+
+      <div>
+        <p class="section-label primary"><i class="bi bi-activity"></i> Symptoms</p>
+        <div class="symptom-chips">
+          <span class="symptom-chip">Redness</span>
+          <span class="symptom-chip">Minor swelling</span>
+          <span class="symptom-chip">Dry skin</span>
+          <span class="symptom-chip">Painful to touch</span>
+          <span class="symptom-chip">No blisters</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-label primary"><i class="bi bi-heart-pulse-fill"></i> Immediate First Aid (WHO)</p>
+        <ul class="step-list">
+          <li><span class="step-num">1</span>Cool the burn under cool running water for at least 10–20 minutes</li>
+          <li><span class="step-num">2</span>Remove watches, rings, or tight clothing near the area before swelling begins</li>
+          <li><span class="step-num">3</span>Apply soothing lotion, aloe vera gel, or a moisturiser to relieve discomfort</li>
+          <li><span class="step-num">4</span>Cover loosely with a sterile non-stick gauze bandage or clean cloth</li>
+          <li><span class="step-num">5</span>Take over-the-counter pain relief such as ibuprofen or paracetamol if needed</li>
+          <li><span class="step-num">6</span>Monitor for signs of infection over 24 to 48 hours</li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="section-label"><i class="bi bi-x-octagon-fill"></i> Do NOT</p>
+        <div class="avoid-row">
+          <ul class="step-list">
+            <li><span class="step-num">✕</span>Apply ice or ice-cold water — causes frostbite and deeper tissue damage</li>
+            <li><span class="step-num">✕</span>Use butter, toothpaste, or oil — traps heat and increases infection risk</li>
+            <li><span class="step-num">✕</span>Break any skin even if it peels — exposes wound to bacteria</li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-label"><i class="bi bi-clock-fill"></i> Expected Recovery</p>
+        <p style="font-size:0.85rem; color:var(--muted); margin:0; line-height:1.55;">Usually heals within <strong style="color:var(--text);">3–5 days</strong> without scarring. Skin may peel as it heals — this is normal. Seek care if pain worsens after 48 hours.</p>
+      </div>
+
+    </div>
+    <div class="card-foot"><i class="bi bi-check-circle-fill"></i> Usually manageable at home without hospital visit</div>
+  </div>
+
+  <!-- ====== SECOND DEGREE ====== -->
+  <div class="degree-card second">
+    <div class="card-accent"></div>
+    <div class="card-head">
+      <div class="degree-icon">🟡</div>
+      <div class="card-head-text">
+        <h3>Second-Degree Burn</h3>
+        <span class="severity-pill">Partial Thickness</span>
+      </div>
+      <!-- SPEAKER BUTTON -->
+      <button class="speak-btn" id="speakBtn2"
+              data-tooltip="Read First Aid aloud"
+              onclick="speakGuide('second')">
+        <i class="bi bi-volume-up-fill" id="speakIcon2"></i>
+      </button>
+    </div>
+    <div class="card-divider"></div>
+
+    <div class="card-body-inner">
+
+      <div>
+        <p class="section-label primary"><i class="bi bi-activity"></i> Symptoms</p>
+        <div class="symptom-chips">
+          <span class="symptom-chip">Blisters</span>
+          <span class="symptom-chip">Deep redness</span>
+          <span class="symptom-chip">Wet / shiny skin</span>
+          <span class="symptom-chip">Intense pain</span>
+          <span class="symptom-chip">Swelling</span>
+          <span class="symptom-chip">Scarring risk</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-label primary"><i class="bi bi-heart-pulse-fill"></i> Immediate First Aid (WHO)</p>
+        <ul class="step-list">
+          <li><span class="step-num">1</span>Immediately cool under running water for at least 20 minutes — do not delay</li>
+          <li><span class="step-num">2</span>Remove jewellery and clothing near the burn before swelling occurs, unless stuck to skin</li>
+          <li><span class="step-num">3</span>Do NOT break blisters — they protect the wound from infection</li>
+          <li><span class="step-num">4</span>Cover loosely with sterile non-adhesive dressing or clean cling wrap</li>
+          <li><span class="step-num">5</span>Elevate the burned area above heart level if possible to reduce swelling</li>
+          <li><span class="step-num">6</span>Seek medical care if the burn is larger than 3 centimetres, or on the face, hands, feet, genitals, or a joint</li>
+          <li><span class="step-num">7</span>Do not apply any creams or home remedies before professional assessment</li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="section-label"><i class="bi bi-x-octagon-fill"></i> Do NOT</p>
+        <div class="avoid-row">
+          <ul class="step-list">
+            <li><span class="step-num">✕</span>Pop or drain blisters — dramatically increases infection and scarring risk</li>
+            <li><span class="step-num">✕</span>Apply adhesive bandages directly on the wound — causes further damage on removal</li>
+            <li><span class="step-num">✕</span>Use fluffy cotton wool — fibres stick to the wound surface</li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-label"><i class="bi bi-clock-fill"></i> Expected Recovery</p>
+        <p style="font-size:0.85rem; color:var(--muted); margin:0; line-height:1.55;">Superficial second-degree: <strong style="color:var(--text);">2–3 weeks</strong>. Deep second-degree may require <strong style="color:var(--text);">skin grafting</strong> and can leave permanent scars.</p>
+      </div>
+
+    </div>
+    <div class="card-foot"><i class="bi bi-exclamation-circle-fill"></i> Seek medical care for burns larger than 3 cm or on sensitive areas</div>
+  </div>
+
+  <!-- ====== THIRD DEGREE ====== -->
+  <div class="degree-card third">
+    <div class="card-accent"></div>
+    <div class="card-head">
+      <div class="degree-icon">🔴</div>
+      <div class="card-head-text">
+        <h3>Third-Degree Burn</h3>
+        <span class="severity-pill">Full Thickness — Emergency</span>
+      </div>
+      <!-- SPEAKER BUTTON -->
+      <button class="speak-btn" id="speakBtn3"
+              data-tooltip="Read First Aid aloud"
+              onclick="speakGuide('third')">
+        <i class="bi bi-volume-up-fill" id="speakIcon3"></i>
+      </button>
+    </div>
+    <div class="card-divider"></div>
+
+    <div class="card-body-inner">
+
+      <div>
+        <p class="section-label primary"><i class="bi bi-activity"></i> Symptoms</p>
+        <div class="symptom-chips">
+          <span class="symptom-chip">White / charred skin</span>
+          <span class="symptom-chip">Leathery texture</span>
+          <span class="symptom-chip">No pain (nerve damage)</span>
+          <span class="symptom-chip">No blisters</span>
+          <span class="symptom-chip">Dry / waxy appearance</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-label primary"><i class="bi bi-heart-pulse-fill"></i> Emergency Response (WHO)</p>
+        <ul class="step-list">
+          <li><span class="step-num">1</span>Call emergency services immediately — this is a life-threatening emergency</li>
+          <li><span class="step-num">2</span>Ensure your own safety first — remove the person from danger if safe to do so</li>
+          <li><span class="step-num">3</span>Do NOT apply water, ice, or any cream or ointment to the wound</li>
+          <li><span class="step-num">4</span>Cover loosely with a clean dry cloth or sterile dressing — do not wrap tightly</li>
+          <li><span class="step-num">5</span>Keep the person lying down, warm, and still to prevent shock</li>
+          <li><span class="step-num">6</span>Elevate burned limbs above heart level if possible and if not causing pain</li>
+          <li><span class="step-num">7</span>Monitor breathing — severe burns can cause airway swelling; be ready to give CPR</li>
+          <li><span class="step-num">8</span>Do not give food or drink — surgery may be required immediately upon arrival</li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="section-label"><i class="bi bi-x-octagon-fill"></i> Do NOT</p>
+        <div class="avoid-row">
+          <ul class="step-list">
+            <li><span class="step-num">✕</span>Remove clothing or material stuck to the wound — causes further trauma and bleeding</li>
+            <li><span class="step-num">✕</span>Apply cold water — can cause hypothermia and shock in large burns</li>
+            <li><span class="step-num">✕</span>Leave the person alone — shock can set in rapidly</li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-label"><i class="bi bi-clock-fill"></i> Prognosis</p>
+        <p style="font-size:0.85rem; color:var(--muted); margin:0; line-height:1.55;">Requires <strong style="color:var(--text);">hospital admission</strong>, likely ICU care, skin grafting, and months of rehabilitation.</p>
+      </div>
+
+    </div>
+    <div class="card-foot"><i class="bi bi-telephone-fill"></i> Call emergency services immediately — every second counts</div>
+  </div>
+
+</div>
+
+<!-- ===== GENERAL SAFETY ===== -->
+<div class="safety-section fade-in-up delay-2">
+  <div class="safety-header">
+    <div class="page-badge" style="margin:0;"><i class="bi bi-shield-fill-exclamation"></i> Safety</div>
+    <h4>General Safety Guidelines</h4>
+  </div>
+
+  <div class="safety-grid">
+    <div class="safety-item">
+      <i class="bi bi-x-circle-fill"></i>
+      <p><span>Never Use Home Remedies</span>Butter, oil, toothpaste, egg white, or flour trap heat and bacteria — all significantly worsen burn injuries.</p>
+    </div>
+    <div class="safety-item">
+      <i class="bi bi-snow"></i>
+      <p><span>Avoid Ice Directly on Skin</span>Ice constricts blood vessels and can cause frostbite on damaged tissue, especially for second and third degree burns.</p>
+    </div>
+    <div class="safety-item">
+      <i class="bi bi-watch"></i>
+      <p><span>Remove Tight Items Early</span>Remove rings, watches, and tight clothing immediately — swelling occurs rapidly and these can cut off circulation.</p>
+    </div>
+    <div class="safety-item">
+      <i class="bi bi-person-fill-exclamation"></i>
+      <p><span>Face, Hands &amp; Joints — Seek Care</span>Burns on the face, hands, feet, genitals, or over a joint always require professional medical evaluation regardless of degree.</p>
+    </div>
+    <div class="safety-item">
+      <i class="bi bi-lungs-fill"></i>
+      <p><span>Watch for Inhalation Injury</span>Burns near the face or from smoke/chemical exposure may cause airway swelling. Symptoms: hoarseness, difficulty breathing, singed nose hairs.</p>
+    </div>
+    <div class="safety-item">
+      <i class="bi bi-droplet-fill"></i>
+      <p><span>Hydration Matters</span>Severe burns cause major fluid loss. WHO protocols recommend early intravenous fluid resuscitation for burns covering more than 15% body surface area.</p>
+    </div>
+    <div class="safety-item">
+      <i class="bi bi-thermometer-sun"></i>
+      <p><span>Prevent Hypothermia</span>Cooling is essential but prolonged cold water on large burns can cause dangerous drop in body temperature, especially in children and elderly.</p>
+    </div>
+    <div class="safety-item">
+      <i class="bi bi-bacteria"></i>
+      <p><span>Infection Prevention</span>Keep the wound covered and clean. Signs of infection — increasing redness, pus, fever, or odour — require immediate medical attention.</p>
+    </div>
+  </div>
+
+  <div class="who-info">
+    <i class="bi bi-info-circle-fill"></i>
+    <div>
+      <h6>WHO Burn Care Note</h6>
+      <p>According to the World Health Organization, burns are among the most common and devastating forms of trauma. An estimated 180,000 deaths occur annually from burns globally — the vast majority preventable. WHO recommends immediate cooling, wound covering, and rapid transfer to a burn care facility for all moderate-to-severe burns. This guide reflects WHO's published first aid and burn prevention guidelines and is intended for educational purposes only.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AUDIO SCRIPT ===== -->
+<script>
+  /* Speech text for each degree — First Aid steps + Do NOT warnings */
+  var speechTexts = {
+
+    first: [
+      "First-Degree Burn. Superficial burn. Immediate First Aid:",
+      "Step 1. Cool the burn under cool running water for at least 10 to 20 minutes.",
+      "Step 2. Remove watches, rings, or tight clothing near the area before swelling begins.",
+      "Step 3. Apply soothing lotion, aloe vera gel, or a moisturiser to relieve discomfort.",
+      "Step 4. Cover loosely with a sterile non-stick gauze bandage or clean cloth.",
+      "Step 5. Take over-the-counter pain relief such as ibuprofen or paracetamol if needed.",
+      "Step 6. Monitor for signs of infection over 24 to 48 hours.",
+      "Do NOT do the following.",
+      "Do NOT apply ice or ice-cold water. It causes frostbite and deeper tissue damage.",
+      "Do NOT use butter, toothpaste, or oil. They trap heat and increase infection risk.",
+      "Do NOT break any skin even if it peels. It exposes the wound to bacteria."
+    ].join(" "),
+
+    second: [
+      "Second-Degree Burn. Partial thickness burn. Immediate First Aid:",
+      "Step 1. Immediately cool under running water for at least 20 minutes. Do not delay.",
+      "Step 2. Remove jewellery and clothing near the burn before swelling occurs, unless stuck to skin.",
+      "Step 3. Do not break blisters. They protect the wound from infection.",
+      "Step 4. Cover loosely with sterile non-adhesive dressing or clean cling wrap.",
+      "Step 5. Elevate the burned area above heart level if possible to reduce swelling.",
+      "Step 6. Seek medical care if the burn is larger than 3 centimetres, or on the face, hands, feet, genitals, or a joint.",
+      "Step 7. Do not apply any creams or home remedies before professional assessment.",
+      "Do NOT do the following.",
+      "Do NOT pop or drain blisters. It dramatically increases infection and scarring risk.",
+      "Do NOT apply adhesive bandages directly on the wound. They cause further damage on removal.",
+      "Do NOT use fluffy cotton wool. Fibres stick to the wound surface."
+    ].join(" "),
+
+    third: [
+      "Third-Degree Burn. Full thickness burn. This is a critical emergency.",
+      "Step 1. Call emergency services immediately. This is a life-threatening emergency.",
+      "Step 2. Ensure your own safety first. Remove the person from danger only if safe to do so.",
+      "Step 3. Do NOT apply water, ice, or any cream or ointment to the wound.",
+      "Step 4. Cover loosely with a clean dry cloth or sterile dressing. Do not wrap tightly.",
+      "Step 5. Keep the person lying down, warm, and still to prevent shock.",
+      "Step 6. Elevate burned limbs above heart level if possible and if not causing pain.",
+      "Step 7. Monitor breathing. Severe burns can cause airway swelling. Be ready to give CPR.",
+      "Step 8. Do not give food or drink. Surgery may be required immediately upon arrival.",
+      "Do NOT do the following.",
+      "Do NOT remove clothing or material stuck to the wound. It causes further trauma and bleeding.",
+      "Do NOT apply cold water. It can cause hypothermia and shock in large burns.",
+      "Do NOT leave the person alone. Shock can set in rapidly."
+    ].join(" ")
+
+  };
+
+  var currentUtterance = null;
+  var currentDegree = null;
+
+  function speakGuide(degree) {
+    var btn  = document.getElementById('speakBtn'  + (degree === 'first' ? 1 : degree === 'second' ? 2 : 3));
+    var icon = document.getElementById('speakIcon' + (degree === 'first' ? 1 : degree === 'second' ? 2 : 3));
+
+    /* If already speaking this degree → stop */
+    if (currentDegree === degree && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      stopSpeaking(btn, icon);
+      return;
+    }
+
+    /* Stop any other ongoing speech */
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+    }
+
+    /* Stop previously active button if different degree */
+    if (currentDegree && currentDegree !== degree) {
+      var prevNum  = currentDegree === 'first' ? 1 : currentDegree === 'second' ? 2 : 3;
+      var prevBtn  = document.getElementById('speakBtn'  + prevNum);
+      var prevIcon = document.getElementById('speakIcon' + prevNum);
+      if (prevBtn)  stopSpeaking(prevBtn, prevIcon);
+    }
+
+    /* Check browser support */
+    if (!window.speechSynthesis) {
+      alert('Sorry, your browser does not support text-to-speech. Please try Chrome or Edge.');
+      return;
+    }
+
+    /* Create utterance */
+    var utterance = new SpeechSynthesisUtterance(speechTexts[degree]);
+    utterance.lang  = 'en-US';
+    utterance.rate  = 0.92;
+    utterance.pitch = 1;
+
+    utterance.onstart = function() {
+      currentDegree = degree;
+      btn.classList.add('speaking');
+      btn.setAttribute('data-tooltip', 'Click to stop');
+      icon.className = 'bi bi-volume-up-fill';
+    };
+
+    utterance.onend = function() {
+      stopSpeaking(btn, icon);
+    };
+
+    utterance.onerror = function() {
+      stopSpeaking(btn, icon);
+    };
+
+    currentUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function stopSpeaking(btn, icon) {
+    currentDegree = null;
+    currentUtterance = null;
+    if (btn)  btn.classList.remove('speaking');
+    if (btn)  btn.setAttribute('data-tooltip', 'Read First Aid aloud');
+    if (icon) icon.className = 'bi bi-volume-up-fill';
+  }
+
+  /* Stop speech if user navigates away */
+  window.addEventListener('beforeunload', function() {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+    }
+  });
+</script>
+
+{% endblock %}

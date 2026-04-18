@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+  .emergency-hero {
+    text-align: center;
+    padding: 2.5rem 0 2rem;
+    max-width: 580px;
+    margin: 0 auto;
+  }
+  .page-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: rgba(230,57,70,0.1); color: var(--primary);
+    border: 1px solid rgba(230,57,70,0.22); border-radius: 50px;
+    padding: 0.32rem 1rem; font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem;
+  }
+  .emergency-hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800; color: var(--text); margin-bottom: 0.65rem; line-height: 1.2;
+  }
+  .emergency-hero h1 .highlight {
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .emergency-hero p { color: var(--muted); font-size: 0.97rem; line-height: 1.65; }
+
+  /* CONTACT CARDS */
+  .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2.5rem; }
+  @media (max-width: 575px) { .contact-grid { grid-template-columns: 1fr; } }
+
+  .contact-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden;
+    transition: transform 0.22s, box-shadow 0.22s;
+  }
+  .contact-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1); }
+  .top-bar { height: 4px; width: 100%; }
+  .contact-card.ambulance .top-bar { background: linear-gradient(90deg,#e63946,#ff6b77); }
+  .contact-card.police    .top-bar { background: linear-gradient(90deg,#2563eb,#60a5fa); }
+  .contact-card.fire      .top-bar { background: linear-gradient(90deg,#ff9f1c,#ffbf5e); }
+  .contact-inner {
+    padding: 1.5rem 1.25rem; display: flex; flex-direction: column;
+    align-items: center; gap: 0.5rem; text-align: center;
+  }
+  .contact-icon-wrap {
+    width: 54px; height: 54px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 0.2rem;
+  }
+  .contact-card.ambulance .contact-icon-wrap { background:rgba(230,57,70,0.1); border:1px solid rgba(230,57,70,0.18); }
+  .contact-card.police    .contact-icon-wrap { background:rgba(37,99,235,0.1);  border:1px solid rgba(37,99,235,0.18); }
+  .contact-card.fire      .contact-icon-wrap { background:rgba(255,159,28,0.1); border:1px solid rgba(255,159,28,0.18); }
+  .contact-label { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; color:var(--text); margin:0; }
+  .contact-desc  { font-size:0.77rem; color:var(--muted); margin-bottom:0.4rem; }
+  .call-btn {
+    display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+    width: 100%; padding: 0.7rem; border-radius: 12px; border: none;
+    font-family: 'Syne',sans-serif; font-weight: 700; font-size: 1rem;
+    text-decoration: none; transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .call-btn:hover { transform: scale(1.03); }
+  .contact-card.ambulance .call-btn { background:linear-gradient(135deg,#e63946,#b52d38); color:#fff; box-shadow:0 5px 18px rgba(230,57,70,0.3); }
+  .contact-card.police    .call-btn { background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; box-shadow:0 5px 18px rgba(37,99,235,0.3); }
+  .contact-card.fire      .call-btn { background:linear-gradient(135deg,#ff9f1c,#e08900); color:#fff; box-shadow:0 5px 18px rgba(255,159,28,0.3); }
+  .pulse-ring {
+    display: inline-block; width:8px; height:8px;
+    background:rgba(255,255,255,0.6); border-radius:50%;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse-dot { 0%,100%{transform:scale(1);opacity:0.5} 50%{transform:scale(1.6);opacity:1} }
+
+  /* DIVIDER */
+  .section-divider { height:1px; background:var(--border); margin:2rem 0; }
+
+  /* MAP SECTION */
+  .map-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family:'Syne',sans-serif; font-size:1.15rem; font-weight:700;
+    color:var(--text); display:flex; align-items:center; gap:0.5rem; margin:0;
+  }
+
+  /* LOCATION BOX */
+  .location-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+
+  .location-tabs {
+    display: flex; gap: 0.5rem;
+    background: var(--bg3); border-radius: 10px; padding: 4px;
+  }
+
+  .loc-tab {
+    flex: 1; padding: 0.5rem 0.75rem; border: none; border-radius: 8px;
+    font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 700;
+    cursor: pointer; transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    background: transparent; color: var(--muted);
+    display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+  }
+
+  .loc-tab.active { background: var(--surface); color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+  .gps-panel, .manual-panel { display: none; }
+  .gps-panel.visible, .manual-panel.visible { display: block; }
+
+  .btn-locate {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff; border:none; border-radius:12px; padding:0.65rem 1.4rem;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:0.88rem;
+    cursor:pointer; box-shadow:0 4px 18px rgba(230,57,70,0.3);
+    transition:transform 0.18s, box-shadow 0.18s; width: 100%; justify-content: center;
+  }
+  .btn-locate:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(230,57,70,0.45); }
+
+  .gps-note {
+    font-size: 0.76rem; color: var(--muted); text-align: center;
+    margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+  }
+
+  .input-row { display: flex; gap: 0.6rem; }
+
+  .location-input {
+    flex: 1; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.65rem 1rem;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--text);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .location-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(230,57,70,0.1); }
+  .location-input::placeholder { color: var(--muted); }
+
+  .btn-search {
+    background: linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color: #fff; border: none; border-radius: 10px; padding: 0.65rem 1.1rem;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem;
+    cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 0.4rem;
+    box-shadow: 0 4px 14px rgba(230,57,70,0.28); transition: transform 0.18s;
+  }
+  .btn-search:hover { transform: translateY(-2px); }
+
+  .manual-note {
+    font-size: 0.75rem; color: var(--muted); margin-top: 0.4rem;
+    display: flex; align-items: center; gap: 0.3rem;
+  }
+
+  /* HOSPITAL LIST */
+  .hospital-list {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; margin-bottom: 1rem; overflow: hidden; display: none;
+  }
+  .hospital-list.visible { display: block; }
+
+  .hospital-list-header {
+    padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border);
+    font-family: 'Syne', sans-serif; font-size: 0.82rem; font-weight: 700;
+    color: var(--muted); display: flex; align-items: center; gap: 0.4rem;
+  }
+
+  .hospital-items { padding: 0.6rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 260px; overflow-y: auto; }
+
+  .hospital-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 0.85rem 1rem;
+    transition: border-color 0.2s, transform 0.15s; cursor: pointer;
+  }
+  .hospital-item:hover { border-color: rgba(230,57,70,0.3); transform: translateX(3px); }
+
+  .hospital-info { flex: 1; min-width: 0; }
+  .hospital-name {
+    font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700;
+    color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0.15rem;
+  }
+  .hospital-dist { font-size: 0.74rem; color: var(--muted); display: flex; align-items: center; gap: 0.3rem; }
+
+  .btn-directions {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: linear-gradient(135deg, #e63946, #b52d38);
+    color: #fff; border: none; border-radius: 8px;
+    padding: 0.4rem 0.8rem; font-size: 0.75rem; font-weight: 700;
+    font-family: 'Syne', sans-serif; cursor: pointer; text-decoration: none;
+    box-shadow: 0 3px 10px rgba(230,57,70,0.25);
+    transition: transform 0.15s, box-shadow 0.15s; flex-shrink: 0;
+  }
+  .btn-directions:hover { transform: translateY(-1px); color: #fff; box-shadow: 0 5px 14px rgba(230,57,70,0.35); }
+
+  .no-hospitals { text-align: center; padding: 1.5rem; color: var(--muted); font-size: 0.85rem; }
+
+  /* MAP CARD — always visible */
+  .map-card { border: 1px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.07); }
+  #map { height: 400px; border-radius: 0; width: 100%; }
+
+  /* WARNING */
+  .warning-box {
+    background:rgba(230,57,70,0.05); border:1px solid rgba(230,57,70,0.2);
+    border-radius:18px; overflow:hidden; margin-bottom:2.5rem;
+  }
+  .warning-header {
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    padding:1rem 1.5rem; display:flex; align-items:center; gap:0.75rem;
+  }
+  .warning-header h5 { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; color:#fff; margin:0; }
+  .warning-header i  { color:rgba(255,255,255,0.85); font-size:1.2rem; }
+  .warning-body {
+    padding:1.5rem; display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:0.85rem;
+  }
+  @media(max-width:480px){
+    .warning-body { grid-template-columns:1fr; }
+    .map-section-header { flex-direction:column; align-items:flex-start; }
+    .input-row { flex-direction: column; }
+    .btn-search { width: 100%; justify-content: center; }
+  }
+  .warn-item {
+    display:flex; align-items:flex-start; gap:0.7rem;
+    background:var(--surface); border:1px solid rgba(230,57,70,0.1);
+    border-radius:12px; padding:0.85rem 1rem;
+  }
+  .warn-item i { color:var(--primary); font-size:1rem; flex-shrink:0; margin-top:2px; }
+  .warn-item p { font-size:0.85rem; color:var(--text); margin:0; line-height:1.5; }
+  .warn-item p span { font-weight:600; display:block; font-size:0.8rem; margin-bottom:0.1rem; color:var(--primary); }
+
+  .spin { display:inline-block; animation:spin 1s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+</style>
+
+<!-- HERO -->
+<div class="emergency-hero fade-in-up">
+  <div class="page-badge"><i class="bi bi-hospital-fill"></i> Emergency Support</div>
+  <h1><span class="highlight">Emergency</span> Help &amp; Support</h1>
+  <p>Find nearby hospitals and contact emergency services immediately. Every second counts in a burn emergency.</p>
+</div>
+
+<!-- CONTACT CARDS -->
+<div class="contact-grid fade-in-up delay-1">
+
+  <div class="contact-card ambulance">
+    <div class="top-bar"></div>
+    <div class="contact-inner">
+      <div class="contact-icon-wrap">🚑</div>
+      <p class="contact-label">Ambulance</p>
+      <p class="contact-desc">Medical emergency &amp; burn victims</p>
+      <a href="tel:108" class="call-btn"><span class="pulse-ring"></span><i class="bi bi-telephone-fill"></i> Call 108</a>
+    </div>
+  </div>
+
+  <div class="contact-card police">
+    <div class="top-bar"></div>
+    <div class="contact-inner">
+      <div class="contact-icon-wrap">👮</div>
+      <p class="contact-label">Police</p>
+      <p class="contact-desc">Security threats &amp; accidents</p>
+      <a href="tel:100" class="call-btn"><span class="pulse-ring"></span><i class="bi bi-telephone-fill"></i> Call 100</a>
+    </div>
+  </div>
+
+  <div class="contact-card fire">
+    <div class="top-bar"></div>
+    <div class="contact-inner">
+      <div class="contact-icon-wrap">🚒</div>
+      <p class="contact-label">Fire Service</p>
+      <p class="contact-desc">Fire hazards &amp; rescue operations</p>
+      <a href="tel:101" class="call-btn"><span class="pulse-ring"></span><i class="bi bi-telephone-fill"></i> Call 101</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-divider"></div>
+
+<!-- MAP SECTION -->
+<div class="fade-in-up delay-2">
+  <div class="map-section-header">
+    <h4 class="section-title"><i class="bi bi-pin-map-fill text-danger"></i> Nearby Hospitals &amp; Medical Services</h4>
+  </div>
+
+  <!-- LOCATION BOX -->
+  <div class="location-box">
+    <div class="location-tabs">
+      <button class="loc-tab active" id="tabGPS" onclick="switchTab('gps')">
+        <i class="bi bi-crosshair2"></i> Use My Location
+      </button>
+      <button class="loc-tab" id="tabManual" onclick="switchTab('manual')">
+        <i class="bi bi-keyboard"></i> Enter Location
+      </button>
+    </div>
+
+    <div class="gps-panel visible" id="gpsPanel">
+      <button class="btn-locate" id="btnLocate" onclick="getLocation()">
+        <i class="bi bi-geo-alt-fill"></i> Find Nearby Hospitals
+      </button>
+      <p class="gps-note"><i class="bi bi-info-circle"></i> Uses Wi-Fi based location — works on laptops without GPS</p>
+    </div>
+
+    <div class="manual-panel" id="manualPanel">
+      <div class="input-row">
+        <input type="text" class="location-input" id="locationInput"
+               placeholder="e.g. Pollachi, Tamil Nadu"
+               onkeydown="if(event.key==='Enter') searchLocation()">
+        <button class="btn-search" id="btnSearch" onclick="searchLocation()">
+          <i class="bi bi-search"></i> Search
+        </button>
+      </div>
+      <p class="manual-note">
+        <i class="bi bi-lightbulb-fill text-warning"></i>
+        Type your city or area and press Search to find nearby hospitals
+      </p>
+    </div>
+  </div>
+
+  <!-- HOSPITAL LIST -->
+  <div class="hospital-list" id="hospitalList">
+    <div class="hospital-list-header"><i class="bi bi-hospital-fill text-danger"></i> Nearest Hospitals &amp; Clinics</div>
+    <div class="hospital-items" id="hospitalItems"></div>
+  </div>
+
+  <!-- MAP — always visible in DOM -->
+  <div class="map-card">
+    <div id="map"></div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- SEVERE BURN WARNING -->
+<div class="warning-box fade-in-up delay-3">
+  <div class="warning-header">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <h5>Severe Burn — Critical Response Guide</h5>
+  </div>
+  <div class="warning-body">
+    <div class="warn-item"><i class="bi bi-telephone-fill"></i><p><span>Call Emergency Services</span>Dial 108 immediately. Third-degree burns are life-threatening and require instant hospital care.</p></div>
+    <div class="warn-item"><i class="bi bi-droplet-slash-fill"></i><p><span>No Water, Ice or Ointments</span>Do NOT apply water, ice, cream, or butter — this worsens injury and can cause shock.</p></div>
+    <div class="warn-item"><i class="bi bi-bandaid-fill"></i><p><span>Cover with Clean Cloth</span>Loosely cover with a sterile dry dressing. Never wrap tightly or use adhesive bandages.</p></div>
+    <div class="warn-item"><i class="bi bi-person-fill"></i><p><span>Keep Patient Calm &amp; Warm</span>Lay the person flat, keep warm with a blanket. Shock can develop rapidly.</p></div>
+    <div class="warn-item"><i class="bi bi-lungs-fill"></i><p><span>Monitor Breathing</span>Burns near the face can swell the airway. Watch for hoarseness or difficulty breathing.</p></div>
+    <div class="warn-item"><i class="bi bi-cup-straw"></i><p><span>No Food or Drink</span>Do not give the patient anything to eat or drink — surgery may be required immediately.</p></div>
+  </div>
+</div>
+
+<script>
+  var leafletMap = null;
+
+  /* ── TAB SWITCHER ── */
+  function switchTab(tab) {
+    document.getElementById('tabGPS').classList.toggle('active', tab === 'gps');
+    document.getElementById('tabManual').classList.toggle('active', tab === 'manual');
+    document.getElementById('gpsPanel').classList.toggle('visible', tab === 'gps');
+    document.getElementById('manualPanel').classList.toggle('visible', tab === 'manual');
+  }
+
+  /* ── DISTANCE (Haversine) ── */
+  function getDistance(lat1, lon1, lat2, lon2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  /* ── INIT MAP — CartoDB tiles (no 403 error) ── */
+  function initMap(lat, lon) {
+    if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+    leafletMap = L.map('map').setView([lat, lon], 14);
+
+    /* FIX: CartoDB Positron — free, no Referer required, works on localhost */
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(leafletMap);
+
+    return leafletMap;
+  }
+
+  /* ── RENDER HOSPITAL LIST ── */
+  function renderHospitalList(hospitals, originLat, originLon) {
+    var listEl  = document.getElementById('hospitalList');
+    var itemsEl = document.getElementById('hospitalItems');
+    itemsEl.innerHTML = '';
+
+    if (hospitals.length === 0) {
+      itemsEl.innerHTML = '<div class="no-hospitals"><i class="bi bi-hospital" style="font-size:1.5rem;opacity:0.3;display:block;margin-bottom:0.5rem;"></i>No hospitals found nearby. Try expanding your search area.</div>';
+      listEl.classList.add('visible');
+      return;
+    }
+
+    /* Sort nearest first */
+    hospitals.sort(function(a, b) {
+      return getDistance(originLat, originLon, a.lat, a.lon) - getDistance(originLat, originLon, b.lat, b.lon);
+    });
+
+    hospitals.slice(0, 8).forEach(function(h) {
+      var dist    = getDistance(originLat, originLon, h.lat, h.lon);
+      var distStr = dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km';
+      var gmapsDir = 'https://www.google.com/maps/dir/?api=1&origin=' + originLat + ',' + originLon + '&destination=' + h.lat + ',' + h.lon + '&travelmode=driving';
+      var gmapsView = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(h.name) + '&query_place_id=&center=' + h.lat + ',' + h.lon;
+
+      var item = document.createElement('div');
+      item.className = 'hospital-item';
+      item.innerHTML =
+        '<div class="hospital-info">' +
+          '<div class="hospital-name">🏥 ' + h.name + '</div>' +
+          '<div class="hospital-dist"><i class="bi bi-geo-alt-fill text-danger"></i>' + distStr + ' away</div>' +
+        '</div>' +
+        '<a href="' + gmapsDir + '" target="_blank" class="btn-directions" onclick="event.stopPropagation();">' +
+          '<i class="bi bi-map-fill"></i> Directions' +
+        '</a>';
+
+      /* Click row → open in Google Maps */
+      item.addEventListener('click', function() {
+        window.open(gmapsView, '_blank');
+      });
+
+      itemsEl.appendChild(item);
+    });
+
+    listEl.classList.add('visible');
+  }
+
+  /* ── LOAD HOSPITALS (Overpass + render) ── */
+  function loadHospitals(lat, lon, map) {
+
+    /* User marker */
+    L.marker([lat, lon], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="background:#e63946;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px rgba(230,57,70,0.4);"></div>',
+        iconSize: [14,14], iconAnchor: [7,7]
+      })
+    }).addTo(map).bindPopup('<b>📍 You are here</b>').openPopup();
+
+    /* Overpass — hospitals AND clinics within 10km */
+    var query = '[out:json][timeout:25];(node["amenity"~"hospital|clinic"](around:10000,' + lat + ',' + lon + ');way["amenity"~"hospital|clinic"](around:10000,' + lat + ',' + lon + '););out center;';
+
+    fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+
+        var hospitals = data.elements.map(function(el) {
+          return {
+            lat:  el.lat  || (el.center && el.center.lat),
+            lon:  el.lon  || (el.center && el.center.lon),
+            name: (el.tags && el.tags.name) ? el.tags.name : 'Hospital / Clinic'
+          };
+        }).filter(function(h) { return h.lat && h.lon; });
+
+        renderHospitalList(hospitals, lat, lon);
+
+        /* Map markers */
+        hospitals.slice(0, 8).forEach(function(h) {
+          var dist    = getDistance(lat, lon, h.lat, h.lon);
+          var distStr = dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km';
+          var gmapsDir = 'https://www.google.com/maps/dir/?api=1&origin=' + lat + ',' + lon + '&destination=' + h.lat + ',' + h.lon + '&travelmode=driving';
+
+          L.marker([h.lat, h.lon], {
+            icon: L.divIcon({
+              className: '',
+              html: '<div style="background:#fff;border:2px solid #e63946;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 3px 10px rgba(0,0,0,0.2);">🏥</div>',
+              iconSize: [28,28], iconAnchor: [14,14]
+            })
+          }).addTo(map).bindPopup(
+            '<div style="font-family:sans-serif;min-width:170px;">' +
+            '<b style="font-size:0.88rem;">' + h.name + '</b>' +
+            '<div style="font-size:0.75rem;color:#888;margin:0.2rem 0;">' + distStr + ' away</div>' +
+            '<a href="' + gmapsDir + '" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:#e63946;color:#fff;padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;text-decoration:none;margin-top:4px;">' +
+            '🗺 Get Directions</a></div>'
+          );
+        });
+      })
+      .catch(function() {
+        /* Fallback: Google Maps hospital search */
+        document.getElementById('hospitalItems').innerHTML =
+          '<div class="no-hospitals">Could not load hospital data automatically.<br>' +
+          '<a href="https://www.google.com/maps/search/hospitals+near+me/@' + lat + ',' + lon + ',14z" target="_blank" style="color:#e63946;font-weight:600;">Open Hospitals in Google Maps →</a></div>';
+        document.getElementById('hospitalList').classList.add('visible');
+      });
+  }
+
+  /* ── GPS ── */
+  function getLocation() {
+    var btn = document.getElementById('btnLocate');
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Locating…';
+    btn.disabled = true;
+
+    if (!navigator.geolocation) {
+      alert('Geolocation not supported. Please use the Enter Location tab.');
+      btn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Find Nearby Hospitals';
+      btn.disabled = false;
+      switchTab('manual');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        var lat = position.coords.latitude;
+        var lon = position.coords.longitude;
+        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Located';
+        var map = initMap(lat, lon);
+        loadHospitals(lat, lon, map);
+      },
+      function(error) {
+        btn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Find Nearby Hospitals';
+        btn.disabled = false;
+        var msgs = {
+          1: 'Location permission denied.\n\nPlease allow location in browser settings, or use the "Enter Location" tab.',
+          2: 'Your precise location could not be determined (common on laptops without GPS).\n\nPlease use the "Enter Location" tab to type your city.',
+          3: 'Location request timed out.\n\nPlease try again or use the "Enter Location" tab.'
+        };
+        alert(msgs[error.code] || 'Location unavailable. Please use the Enter Location tab.');
+        switchTab('manual');
+        document.getElementById('locationInput').focus();
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+
+  /* ── MANUAL SEARCH ── */
+  function searchLocation() {
+    var input = document.getElementById('locationInput').value.trim();
+    if (!input) { alert('Please enter a city or location name.'); return; }
+
+    var btn = document.getElementById('btnSearch');
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+    btn.disabled = true;
+
+    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(input) + '&limit=1', {
+      headers: { 'Accept-Language': 'en', 'User-Agent': 'BurnAssistAI/1.0' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      btn.innerHTML = '<i class="bi bi-search"></i> Search';
+      btn.disabled = false;
+      if (!data || data.length === 0) {
+        alert('Location "' + input + '" not found. Try a more specific name, e.g. "Pollachi, Tamil Nadu, India".');
+        return;
+      }
+      var lat = parseFloat(data[0].lat);
+      var lon = parseFloat(data[0].lon);
+      var map = initMap(lat, lon);
+      loadHospitals(lat, lon, map);
+    })
+    .catch(function() {
+      btn.innerHTML = '<i class="bi bi-search"></i> Search';
+      btn.disabled = false;
+      alert('Search failed. Check your internet connection and try again.');
+    });
+  }
+</script>
+
+{% endblock %}

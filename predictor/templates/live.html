@@ -1,0 +1,535 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  /* ===== PAGE LAYOUT ===== */
+  .camera-page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 2.5rem 0 3rem;
+  }
+
+  /* ===== HEADER ===== */
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .page-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255,159,28,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(255,159,28,0.25);
+    border-radius: 50px;
+    padding: 0.32rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .page-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .page-header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ===== MAIN CARD ===== */
+  .camera-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  /* ===== VIDEO AREA ===== */
+  .video-wrapper {
+    position: relative;
+    background: #000;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #video {
+    width: 100%;
+    display: block;
+    max-height: 420px;
+    object-fit: cover;
+  }
+
+  #canvas { display: none; }
+
+  /* Idle placeholder */
+  .video-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: #555;
+    padding: 3.5rem 1rem;
+    width: 100%;
+  }
+
+  .video-placeholder .cam-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 2px dashed #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #444;
+    animation: pulse-border 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { border-color: #333; opacity: 0.7; }
+    50% { border-color: #666; opacity: 1; }
+  }
+
+  .video-placeholder p {
+    font-size: 0.88rem;
+    color: #555;
+    margin: 0;
+  }
+
+  /* Live indicator */
+  .live-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(0,0,0,0.7);
+    color: #ff4444;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    display: none;
+    align-items: center;
+    gap: 0.4rem;
+    backdrop-filter: blur(6px);
+  }
+
+  .live-badge.active { display: flex; }
+
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    background: #ff4444;
+    border-radius: 50%;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  /* Capture flash */
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.05s;
+  }
+
+  /* ===== CAPTURED PREVIEW ===== */
+  .preview-wrapper {
+    display: none;
+    position: relative;
+  }
+
+  .preview-wrapper img {
+    width: 100%;
+    display: block;
+    max-height: 420px;
+    object-fit: cover;
+  }
+
+  .preview-label {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(0,200,100,0.85);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  /* ===== CONTROLS ===== */
+  .camera-controls {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .controls-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .btn-cam {
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-cam:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+
+  .btn-cam:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-start {
+    background: rgba(255,159,28,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(255,159,28,0.3);
+  }
+
+  .btn-start:hover:not(:disabled) {
+    background: rgba(255,159,28,0.25);
+    box-shadow: 0 4px 16px rgba(255,159,28,0.2);
+  }
+
+  .btn-capture {
+    background: rgba(40,200,120,0.12);
+    color: #28c878;
+    border: 1px solid rgba(40,200,120,0.25);
+  }
+
+  .btn-capture:hover:not(:disabled) {
+    background: rgba(40,200,120,0.22);
+    box-shadow: 0 4px 16px rgba(40,200,120,0.2);
+  }
+
+  .btn-retake {
+    background: var(--bg3);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    display: none;
+  }
+
+  /* ===== ANALYZE BUTTON ===== */
+  .btn-analyze {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.9rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(230,57,70,0.35);
+    transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .btn-analyze.ready {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .btn-analyze.ready:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(230,57,70,0.5);
+  }
+
+  .btn-analyze i { font-size: 1.1rem; }
+
+  /* ===== STATUS BAR ===== */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  .status-dot.live { background: var(--accent); animation: blink 1.2s infinite; }
+  .status-dot.captured { background: #28c878; animation: none; }
+
+  .status-text {
+    font-size: 0.8rem;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+
+  /* ===== TIPS ===== */
+  .tips-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .tip-card i {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: var(--accent);
+  }
+
+  .tip-card p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 576px) {
+    .controls-row { grid-template-columns: 1fr; }
+    .tips-row { grid-template-columns: 1fr; }
+    .camera-page { padding: 1.5rem 0 2rem; }
+  }
+</style>
+
+<div class="camera-page">
+
+  <!-- Header -->
+  <div class="page-header fade-in-up">
+    <div class="page-badge"><i class="bi bi-camera-video-fill"></i> Live Capture</div>
+    <h2>Live Camera Check</h2>
+    <p>Start your camera, capture the affected area, then run the AI analysis.</p>
+  </div>
+
+  <!-- Main Card -->
+  <div class="camera-card fade-in-up delay-1">
+
+    <!-- Video / Preview area -->
+    <div class="video-wrapper" id="videoWrapper">
+
+      <!-- Idle placeholder -->
+      <div class="video-placeholder" id="placeholder">
+        <div class="cam-icon"><i class="bi bi-camera-video"></i></div>
+        <p>Camera preview will appear here</p>
+      </div>
+
+      <!-- Video element -->
+      <video id="video" autoplay playsinline></video>
+
+      <!-- Canvas (hidden) -->
+      <canvas id="canvas"></canvas>
+
+      <!-- Captured preview -->
+      <div class="preview-wrapper" id="previewWrapper">
+        <img id="previewImg" src="" alt="Captured">
+        <span class="preview-label"><i class="bi bi-check-circle-fill"></i> Captured</span>
+      </div>
+
+      <!-- Live indicator -->
+      <div class="live-badge" id="liveBadge">
+        <span class="live-dot"></span> LIVE
+      </div>
+
+      <!-- Flash overlay -->
+      <div class="flash-overlay" id="flashOverlay"></div>
+
+    </div>
+
+    <!-- Controls -->
+    <div class="camera-controls">
+
+      <div class="controls-row">
+        <button class="btn-cam btn-start" id="btnStart" onclick="startCamera()">
+          <i class="bi bi-camera-video-fill"></i> Start Camera
+        </button>
+
+        <button class="btn-cam btn-capture" id="btnCapture" onclick="capturePhoto()" disabled>
+          <i class="bi bi-camera-fill"></i> Capture Photo
+        </button>
+      </div>
+
+      <button class="btn-cam btn-retake" id="btnRetake" onclick="retakePhoto()" style="display:none; width:100%;">
+        <i class="bi bi-arrow-counterclockwise"></i> Retake Photo
+      </button>
+
+      <!-- Analyze Form -->
+      <form method="POST" action="{% url 'predict' %}">
+        {% csrf_token %}
+        <input type="hidden" name="captured_image" id="capturedImage">
+        <button type="submit" class="btn-analyze" id="btnAnalyze">
+          <i class="bi bi-cpu-fill"></i> Analyze Captured Image
+        </button>
+      </form>
+
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-text" id="statusText">Waiting to start camera…</span>
+    </div>
+
+  </div>
+
+  <!-- Tips -->
+  <div class="tips-row fade-in-up delay-2">
+    <div class="tip-card">
+      <i class="bi bi-lightbulb-fill"></i>
+      <p>Ensure good lighting for accurate results</p>
+    </div>
+    <div class="tip-card">
+      <i class="bi bi-aspect-ratio-fill"></i>
+      <p>Keep the burn area centered in frame</p>
+    </div>
+    <div class="tip-card">
+      <i class="bi bi-hand-index-fill"></i>
+      <p>Hold steady before capturing the photo</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const video        = document.getElementById("video");
+  const canvas       = document.getElementById("canvas");
+  const capturedInput = document.getElementById("capturedImage");
+  const placeholder  = document.getElementById("placeholder");
+  const previewWrapper = document.getElementById("previewWrapper");
+  const previewImg   = document.getElementById("previewImg");
+  const liveBadge    = document.getElementById("liveBadge");
+  const flashOverlay = document.getElementById("flashOverlay");
+  const btnCapture   = document.getElementById("btnCapture");
+  const btnStart     = document.getElementById("btnStart");
+  const btnRetake    = document.getElementById("btnRetake");
+  const btnAnalyze   = document.getElementById("btnAnalyze");
+  const statusDot    = document.getElementById("statusDot");
+  const statusText   = document.getElementById("statusText");
+
+  function setStatus(state, msg) {
+    statusDot.className = 'status-dot' + (state ? ' ' + state : '');
+    statusText.textContent = msg;
+  }
+
+  function startCamera() {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+        video.style.display = "block";
+        placeholder.style.display = "none";
+        liveBadge.classList.add("active");
+        btnCapture.disabled = false;
+        btnStart.disabled = true;
+        setStatus('live', 'Camera is live — ready to capture');
+      })
+      .catch(() => {
+        alert("Camera access denied or unavailable.");
+        setStatus('', 'Camera access denied');
+      });
+  }
+
+  function capturePhoto() {
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+
+    const dataURL = canvas.toDataURL("image/png");
+    capturedInput.value = dataURL;
+
+    // Flash effect
+    flashOverlay.style.opacity = "1";
+    setTimeout(() => flashOverlay.style.opacity = "0", 120);
+
+    // Show preview
+    previewImg.src = dataURL;
+    video.style.display = "none";
+    liveBadge.classList.remove("active");
+    previewWrapper.style.display = "block";
+
+    // Stop stream
+    if (video.srcObject) {
+      video.srcObject.getTracks().forEach(t => t.stop());
+    }
+
+    // Update UI
+    btnCapture.disabled = true;
+    btnRetake.style.display = "flex";
+    btnAnalyze.classList.add("ready");
+    setStatus('captured', 'Photo captured — ready to analyze');
+  }
+
+  function retakePhoto() {
+    previewWrapper.style.display = "none";
+    previewImg.src = "";
+    capturedInput.value = "";
+    btnRetake.style.display = "none";
+    btnAnalyze.classList.remove("ready");
+    btnStart.disabled = false;
+    btnCapture.disabled = true;
+    placeholder.style.display = "flex";
+    setStatus('', 'Waiting to start camera…');
+  }
+</script>
+
+{% endblock %}

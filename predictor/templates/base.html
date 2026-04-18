@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BurnAssist AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* =========== CSS VARIABLES =========== */
+        :root {
+            --primary:       #E63946;
+            --primary-dark:  #b52d38;
+            --primary-light: #ff6b77;
+            --accent:        #FF9F1C;
+            --bg:            #0d0d0f;
+            --bg2:           #16161a;
+            --bg3:           #1e1e24;
+            --surface:       #23232b;
+            --border:        rgba(255,255,255,0.07);
+            --text:          #f0f0f5;
+            --muted:         #8888a0;
+            --radius:        14px;
+            --shadow:        0 8px 40px rgba(0,0,0,0.45);
+        }
+
+        /* Dark mode override */
+        body.dark-mode {
+            --bg:      #0d0d0f;
+            --bg2:     #16161a;
+            --bg3:     #1e1e24;
+            --surface: #23232b;
+            --border:  rgba(255,255,255,0.07);
+            --text:    #f0f0f5;
+            --muted:   #8888a0;
+        }
+
+        /* =========== BASE =========== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        /* Light mode is default */
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+
+            /* Light mode values as default */
+            --bg:      #f4f4f8;
+            --bg2:     #ffffff;
+            --bg3:     #ebebf0;
+            --surface: #ffffff;
+            --border:  rgba(0,0,0,0.08);
+            --text:    #111118;
+            --muted:   #666677;
+        }
+
+        h1,h2,h3,h4,h5,h6 {
+            font-family: 'Syne', sans-serif;
+        }
+
+        /* =========== NAVBAR =========== */
+        .navbar {
+            background: rgba(255,255,255,0.92) !important;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.6rem 0;
+            transition: background 0.3s;
+        }
+
+        body.dark-mode .navbar {
+            background: rgba(13,13,15,0.92) !important;
+        }
+
+        .navbar-brand {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.35rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text) !important;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(230,57,70,0.4);
+        }
+
+        .brand-text span {
+            color: var(--primary);
+        }
+
+        .nav-link {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            font-size: 0.88rem;
+            color: var(--muted) !important;
+            padding: 0.45rem 0.75rem !important;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            letter-spacing: 0.01em;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text) !important;
+            background: var(--surface);
+        }
+
+        .nav-link i {
+            font-size: 0.95rem;
+        }
+
+        .btn-predict {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff !important;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border: none;
+            border-radius: 10px;
+            padding: 0.5rem 1.2rem;
+            letter-spacing: 0.02em;
+            box-shadow: 0 4px 18px rgba(230,57,70,0.35);
+            transition: transform 0.18s, box-shadow 0.18s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(230,57,70,0.5);
+            color: #fff !important;
+        }
+
+        .btn-theme {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: background 0.2s, transform 0.15s;
+            cursor: pointer;
+        }
+
+        .btn-theme:hover {
+            background: var(--bg3);
+            transform: rotate(15deg);
+        }
+
+        .navbar-toggler {
+            border: 1px solid var(--border) !important;
+            border-radius: 8px !important;
+            padding: 0.35rem 0.6rem !important;
+        }
+
+        .navbar-toggler-icon {
+            filter: none;
+        }
+
+        body.dark-mode .navbar-toggler-icon {
+            filter: invert(1);
+        }
+
+        /* Mobile nav collapse */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 1rem;
+                margin-top: 0.75rem;
+            }
+
+            .nav-link {
+                padding: 0.6rem 0.9rem !important;
+            }
+
+            .nav-item.ms-lg-3,
+            .nav-item.ms-2 {
+                margin-left: 0 !important;
+                margin-top: 0.4rem;
+            }
+
+            .btn-predict {
+                width: 100%;
+                justify-content: center;
+                padding: 0.65rem 1rem;
+            }
+
+            .btn-theme {
+                width: 100%;
+                border-radius: 10px;
+            }
+        }
+
+        /* =========== MAIN CONTENT =========== */
+        .main-content {
+            flex: 1;
+            padding: 2rem 0 3rem;
+        }
+
+        /* =========== FOOTER =========== */
+        footer {
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+            padding: 1.5rem 0;
+        }
+
+        .footer-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-brand {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text);
+        }
+
+        .footer-brand .brand-logo {
+            width: 28px;
+            height: 28px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+
+        .footer-text {
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .footer-badge {
+            background: rgba(230,57,70,0.12);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            border: 1px solid rgba(230,57,70,0.2);
+        }
+
+        /* =========== SCROLLBAR =========== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+        /* =========== UTILITY =========== */
+        .card-dark {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        /* =========== FADE-IN ANIMATION =========== */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(22px);
+            animation: fadeInUp 0.55s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: none; }
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+    </style>
+</head>
+
+<body>
+
+<!-- =========== NAVBAR =========== -->
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+
+    <!-- Brand -->
+    <a class="navbar-brand" href="{% url 'home' %}">
+      <div class="brand-logo">🔥</div>
+      <span class="brand-text">Burn<span>Assist</span> AI</span>
+    </a>
+
+    <!-- Mobile Toggle -->
+    <button class="navbar-toggler border-0" type="button"
+        data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Links -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'home' %}"><i class="bi bi-house-fill"></i> Home</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/guide/"><i class="bi bi-journal-medical"></i> Guide</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/emergency/"><i class="bi bi-hospital-fill"></i> Emergency</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/about/"><i class="bi bi-info-circle-fill"></i> About</a>
+        </li>
+
+        <!-- Predict CTA -->
+        <li class="nav-item ms-lg-2">
+          <a href="{% url 'home' %}" class="btn-predict text-decoration-none">
+            <i class="bi bi-camera-fill"></i> Predict Now
+          </a>
+        </li>
+
+        <!-- Theme Toggle -->
+        <li class="nav-item ms-lg-1">
+          <button class="btn-theme" onclick="toggleDarkMode()" title="Toggle theme">
+            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+          </button>
+        </li>
+
+      </ul>
+    </div>
+
+  </div>
+</nav>
+
+<!-- =========== MAIN CONTENT =========== -->
+<main class="main-content">
+  <div class="container">
+    {% block content %}
+    {% endblock %}
+  </div>
+</main>
+
+<!-- =========== FOOTER =========== -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-logo">🔥</div>
+        BurnAssist AI
+      </div>
+      <p class="footer-text mb-0">© 2026 BurnAssist AI — For educational use only.</p>
+      <span class="footer-badge">⚠ Not a substitute for medical advice</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Dark / Light Mode Script -->
+<script>
+  const themeIcon = document.getElementById('themeIcon');
+
+  // Default: light mode — toggle adds dark-mode class
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    if (document.body.classList.contains('dark-mode')) {
+      themeIcon.className = 'bi bi-sun-fill';
+    } else {
+      themeIcon.className = 'bi bi-moon-stars-fill';
+    }
+  }
+</script>
+
+<!-- Location + Hospital Map Script -->
+<script>
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showMap);
+  } else {
+    alert("Geolocation not supported.");
+  }
+}
+
+function showMap(position) {
+  const lat = position.coords.latitude;
+  const lon = position.coords.longitude;
+
+  const map = L.map('map').setView([lat, lon], 14);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  L.marker([lat, lon])
+    .addTo(map)
+    .bindPopup("📍 You are here")
+    .openPopup();
+
+  const query = `
+    [out:json];
+    node["amenity"="hospital"](around:5000, ${lat}, ${lon});
+    out;
+  `;
+
+  fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    body: query
+  })
+  .then(res => res.json())
+  .then(data => {
+    data.elements.forEach(h => {
+      const hLat = h.lat;
+      const hLon = h.lon;
+      const name = h.tags.name || "Hospital";
+      const directions = `https://www.google.com/maps/dir/${lat},${lon}/${hLat},${hLon}`;
+      L.marker([hLat, hLon])
+        .addTo(map)
+        .bindPopup(`🏥 ${name}<br><a href="${directions}" target="_blank">Get Directions</a>`);
+    });
+  });
+}
+</script>
+
+</body>
+</html>

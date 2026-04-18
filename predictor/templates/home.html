@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+  /* ===== PAGE STYLES ===== */
+  .predict-hero {
+    text-align: center;
+    padding: 3.5rem 0 2.5rem;
+  }
+
+  .predict-hero .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(230,57,70,0.12);
+    color: var(--primary);
+    border: 1px solid rgba(230,57,70,0.25);
+    border-radius: 50px;
+    padding: 0.35rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+  }
+
+  .predict-hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .predict-hero h1 .highlight {
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .predict-hero p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 480px;
+    margin: 0 auto 0.5rem;
+    line-height: 1.65;
+  }
+
+  /* ===== CARDS ===== */
+  .option-cards {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 2.5rem;
+    padding-bottom: 1rem;
+  }
+
+  .option-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.25rem 2rem;
+    width: 100%;
+    max-width: 310px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    cursor: pointer;
+  }
+
+  .option-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: inherit;
+  }
+
+  .option-card.upload::before {
+    background: radial-gradient(ellipse at top left, rgba(230,57,70,0.12), transparent 70%);
+  }
+
+  .option-card.camera::before {
+    background: radial-gradient(ellipse at top left, rgba(255,159,28,0.12), transparent 70%);
+  }
+
+  .option-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  }
+
+  .option-card:hover::before {
+    opacity: 1;
+  }
+
+  .option-card.upload:hover {
+    border-color: rgba(230,57,70,0.4);
+  }
+
+  .option-card.camera:hover {
+    border-color: rgba(255,159,28,0.4);
+  }
+
+  /* Icon box */
+  .card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .option-card.upload .card-icon {
+    background: rgba(230,57,70,0.15);
+    color: var(--primary);
+    border: 1px solid rgba(230,57,70,0.2);
+  }
+
+  .option-card.camera .card-icon {
+    background: rgba(255,159,28,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(255,159,28,0.2);
+  }
+
+  .card-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .option-card.upload .card-tag { color: var(--primary); }
+  .option-card.camera .card-tag { color: var(--accent); }
+
+  .option-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+  }
+
+  .option-card p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+    flex: 1;
+  }
+
+  /* Feature chips */
+  .card-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .chip {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 0.22rem 0.65rem;
+    border-radius: 20px;
+    background: var(--bg3);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  /* CTA button */
+  .card-btn {
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.93;
+  }
+
+  .option-card.upload .card-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(230,57,70,0.35);
+  }
+
+  .option-card.camera .card-btn {
+    background: linear-gradient(135deg, var(--accent), #e08900);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(255,159,28,0.35);
+  }
+
+  .card-btn .arrow {
+    transition: transform 0.2s;
+  }
+
+  .card-btn:hover .arrow {
+    transform: translateX(4px);
+  }
+
+  /* Arrow decoration (top-right) */
+  .card-corner {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    font-size: 1.2rem;
+    opacity: 0.15;
+    transition: opacity 0.25s, transform 0.25s;
+  }
+
+  .option-card:hover .card-corner {
+    opacity: 0.4;
+    transform: scale(1.2) rotate(-10deg);
+  }
+
+  /* ===== DIVIDER ===== */
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0 0.5rem;
+    align-self: center;
+    margin-top: 1rem;
+  }
+
+  .or-divider::before,
+  .or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ===== DISCLAIMER ===== */
+  .disclaimer {
+    margin: 2.5rem auto 0;
+    max-width: 560px;
+    background: rgba(255,159,28,0.07);
+    border: 1px solid rgba(255,159,28,0.18);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    text-align: left;
+  }
+
+  .disclaimer i {
+    color: var(--accent);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .disclaimer p {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .disclaimer strong {
+    color: var(--accent);
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 600px) {
+    .option-cards {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .option-card {
+      max-width: 100%;
+    }
+
+    .or-divider {
+      width: 100%;
+    }
+  }
+</style>
+
+<!-- ===== HERO ===== -->
+<div class="predict-hero fade-in-up">
+  <div class="badge-pill">
+    <i class="bi bi-lightning-fill"></i> AI-Powered Analysis
+  </div>
+
+  <h1>
+    Detect <span class="highlight">Burn Severity</span><br>in Seconds
+  </h1>
+
+  <p>
+    Upload a photo or use your live camera to get an instant AI assessment
+    of burn depth and severity.
+  </p>
+</div>
+
+<!-- ===== CARDS ===== -->
+<div class="option-cards">
+
+  <!-- Upload Card -->
+  <div class="option-card upload fade-in-up delay-1">
+    <div class="card-corner"><i class="bi bi-image"></i></div>
+    <div class="card-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+    <span class="card-tag">From Device</span>
+    <h3>Upload Image</h3>
+    <p>Select a burn photo from your gallery or file system for AI analysis.</p>
+    <div class="card-chips">
+      <span class="chip"><i class="bi bi-check2"></i> JPG / PNG / WEBP</span>
+      <span class="chip"><i class="bi bi-check2"></i> Fast Analysis</span>
+      <span class="chip"><i class="bi bi-check2"></i> Secure</span>
+    </div>
+    <a href="{% url 'upload_page' %}" class="card-btn">
+      Continue <i class="bi bi-arrow-right arrow"></i>
+    </a>
+  </div>
+
+  <!-- OR divider (mobile hidden, shown between cards) -->
+  <div class="or-divider fade-in-up delay-2 d-none d-sm-flex">OR</div>
+
+  <!-- Camera Card -->
+  <div class="option-card camera fade-in-up delay-2">
+    <div class="card-corner"><i class="bi bi-camera"></i></div>
+    <div class="card-icon"><i class="bi bi-camera-video-fill"></i></div>
+    <span class="card-tag">Live Capture</span>
+    <h3>Live Camera</h3>
+    <p>Use your device camera for a real-time scan — ideal for immediate assessment.</p>
+    <div class="card-chips">
+      <span class="chip"><i class="bi bi-check2"></i> Real-time</span>
+      <span class="chip"><i class="bi bi-check2"></i> No Upload Needed</span>
+      <span class="chip"><i class="bi bi-check2"></i> Instant</span>
+    </div>
+    <a href="{% url 'live_page' %}" class="card-btn">
+      Continue <i class="bi bi-arrow-right arrow"></i>
+    </a>
+  </div>
+
+</div>
+
+<!-- ===== DISCLAIMER ===== -->
+<div class="disclaimer fade-in-up delay-3">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <p>
+    <strong>Medical Disclaimer:</strong> This tool is for educational purposes only.
+    Always consult a licensed medical professional for proper burn assessment and treatment.
+    In emergencies, call your local emergency number immediately.
+  </p>
+</div>
+
+{% endblock %}

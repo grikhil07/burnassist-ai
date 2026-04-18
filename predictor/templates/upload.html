@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  /* ===== PAGE LAYOUT ===== */
+  .upload-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+  }
+
+  .upload-wrap {
+    width: 100%;
+    max-width: 520px;
+  }
+
+  /* ===== HEADER ===== */
+  .page-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(230,57,70,0.1);
+    color: var(--primary);
+    border: 1px solid rgba(230,57,70,0.22);
+    border-radius: 50px;
+    padding: 0.32rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .upload-wrap h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.1rem);
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .upload-wrap > p {
+    color: var(--muted);
+    font-size: 0.93rem;
+    margin-bottom: 1.75rem;
+    line-height: 1.6;
+  }
+
+  /* ===== CARD ===== */
+  .upload-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 10px 50px rgba(0,0,0,0.08);
+  }
+
+  /* ===== DROP ZONE ===== */
+  .dropzone {
+    position: relative;
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    margin: 1.75rem 1.75rem 0;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.25s, background 0.25s;
+    background: var(--bg3);
+    overflow: hidden;
+  }
+
+  .dropzone:hover,
+  .dropzone.dragover {
+    border-color: var(--primary);
+    background: rgba(230,57,70,0.04);
+  }
+
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+  }
+
+  .dz-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: rgba(230,57,70,0.1);
+    border: 1px solid rgba(230,57,70,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: var(--primary);
+    margin: 0 auto 1.1rem;
+    transition: transform 0.25s;
+  }
+
+  .dropzone:hover .dz-icon {
+    transform: scale(1.08) translateY(-3px);
+  }
+
+  .dz-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+  }
+
+  .dz-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .dz-formats {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .dz-chip {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    background: var(--bg2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  /* ===== PREVIEW ===== */
+  .preview-area {
+    display: none;
+    position: relative;
+    margin: 1.75rem 1.75rem 0;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #000;
+  }
+
+  .preview-area img {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .preview-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    padding: 1.25rem 1rem 0.9rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .preview-filename {
+    font-size: 0.78rem;
+    color: #fff;
+    font-weight: 500;
+    max-width: 70%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .preview-remove {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .preview-remove:hover { background: rgba(230,57,70,0.5); }
+
+  /* ===== CONTROLS ===== */
+  .upload-controls {
+    padding: 1.5rem 1.75rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-analyze {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 13px;
+    padding: 0.9rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(230,57,70,0.28);
+    transition: transform 0.18s, box-shadow 0.18s, opacity 0.2s;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .btn-analyze.ready {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .btn-analyze.ready:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(230,57,70,0.45);
+  }
+
+  /* ===== STATUS BAR ===== */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg3);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  .status-dot.ready { background: #28c878; }
+
+  .status-text {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  /* ===== TIPS ===== */
+  .tips-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .tip-card i {
+    font-size: 1.2rem;
+    color: var(--primary);
+    display: block;
+    margin-bottom: 0.45rem;
+  }
+
+  .tip-card p {
+    font-size: 0.77rem;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 576px) {
+    .dropzone { margin: 1.25rem 1.25rem 0; padding: 2rem 1rem; }
+    .upload-controls { padding: 1.25rem; }
+    .tips-row { grid-template-columns: 1fr; }
+    .preview-area { margin: 1.25rem 1.25rem 0; }
+  }
+</style>
+
+<div class="upload-page">
+  <div class="upload-wrap">
+
+    <!-- Header -->
+    <div class="text-center fade-in-up">
+      <div class="page-badge"><i class="bi bi-cloud-arrow-up-fill"></i> Image Upload</div>
+      <h2>Upload Burn Image</h2>
+      <p>Select a clear photo of the burn area for instant AI-powered severity analysis.</p>
+    </div>
+
+    <!-- Card -->
+    <div class="upload-card fade-in-up delay-1">
+
+      <form method="POST" action="{% url 'predict' %}" enctype="multipart/form-data" id="uploadForm">
+        {% csrf_token %}
+
+        <!-- Drop Zone -->
+        <div class="dropzone" id="dropzone">
+          <input type="file" name="image" id="fileInput" accept="image/*" required>
+          <div class="dz-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+          <p class="dz-title">Drag & drop or click to upload</p>
+          <p class="dz-sub">Supports JPG, PNG, WEBP, BMP</p>
+          <div class="dz-formats">
+            <span class="dz-chip">JPG</span>
+            <span class="dz-chip">PNG</span>
+            <span class="dz-chip">WEBP</span>
+            <span class="dz-chip">BMP</span>
+          </div>
+        </div>
+
+        <!-- Image Preview -->
+        <div class="preview-area" id="previewArea">
+          <img id="previewImg" src="" alt="Preview">
+          <div class="preview-overlay">
+            <span class="preview-filename" id="previewFilename">filename.jpg</span>
+            <button type="button" class="preview-remove" onclick="removeFile()">
+              <i class="bi bi-x-lg"></i> Remove
+            </button>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="upload-controls">
+          <button type="submit" class="btn-analyze" id="btnAnalyze">
+            <i class="bi bi-cpu-fill"></i> Analyze Image
+          </button>
+        </div>
+
+      </form>
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">No image selected yet…</span>
+      </div>
+
+    </div>
+
+    <!-- Tips -->
+    <div class="tips-row fade-in-up delay-2">
+      <div class="tip-card">
+        <i class="bi bi-lightbulb-fill"></i>
+        <p>Use bright, even lighting for best accuracy</p>
+      </div>
+      <div class="tip-card">
+        <i class="bi bi-aspect-ratio-fill"></i>
+        <p>Ensure the burn fills most of the frame</p>
+      </div>
+      <div class="tip-card">
+        <i class="bi bi-eye-fill"></i>
+        <p>Avoid blurry or obstructed images</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const fileInput    = document.getElementById('fileInput');
+  const dropzone     = document.getElementById('dropzone');
+  const previewArea  = document.getElementById('previewArea');
+  const previewImg   = document.getElementById('previewImg');
+  const previewName  = document.getElementById('previewFilename');
+  const btnAnalyze   = document.getElementById('btnAnalyze');
+  const statusDot    = document.getElementById('statusDot');
+  const statusText   = document.getElementById('statusText');
+
+  function setStatus(state, msg) {
+    statusDot.className = 'status-dot' + (state ? ' ' + state : '');
+    statusText.textContent = msg;
+  }
+
+  function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewArea.style.display = 'block';
+      dropzone.style.display = 'none';
+      btnAnalyze.classList.add('ready');
+      previewName.textContent = file.name;
+      setStatus('ready', `Ready to analyze: ${file.name}`);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeFile() {
+    fileInput.value = '';
+    previewImg.src = '';
+    previewArea.style.display = 'none';
+    dropzone.style.display = 'block';
+    btnAnalyze.classList.remove('ready');
+    setStatus('', 'No image selected yet…');
+  }
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) showPreview(fileInput.files[0]);
+  });
+
+  // Drag & drop
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+      showPreview(file);
+    }
+  });
+</script>
+
+{% endblock %}

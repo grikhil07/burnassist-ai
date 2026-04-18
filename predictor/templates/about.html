@@ -1,0 +1,594 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+
+  .about-page {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2.5rem 0 3rem;
+  }
+
+  /* HERO */
+  .about-hero {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .page-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(230,57,70,0.1);
+    color: var(--primary);
+    border: 1px solid rgba(230,57,70,0.22);
+    border-radius: 50px;
+    padding: 0.32rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .about-hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.15;
+    margin-bottom: 0.75rem;
+  }
+
+  .about-hero h1 .highlight {
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .about-hero p {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.65;
+  }
+
+  /* STAT ROW */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  @media (max-width: 576px) { .stat-row { grid-template-columns: 1fr; } }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  }
+
+  .stat-icon {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    display: block;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* SECTION CARDS */
+  .about-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+    transition: box-shadow 0.22s;
+  }
+
+  .about-card:hover {
+    box-shadow: 0 10px 36px rgba(0,0,0,0.08);
+  }
+
+  .card-top-bar {
+    height: 3px;
+  }
+
+  .bar-red    { background: linear-gradient(90deg, #e63946, #ff6b77); }
+  .bar-blue   { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+  .bar-purple { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+  .bar-amber  { background: linear-gradient(90deg, #ff9f1c, #ffbf5e); }
+
+  .card-inner {
+    padding: 1.75rem 2rem;
+  }
+
+  @media (max-width: 576px) { .card-inner { padding: 1.25rem; } }
+
+  .card-header-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-icon-wrap {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .icon-red    { background: rgba(230,57,70,0.1);   border: 1px solid rgba(230,57,70,0.2); }
+  .icon-blue   { background: rgba(37,99,235,0.1);   border: 1px solid rgba(37,99,235,0.2); }
+  .icon-purple { background: rgba(124,58,237,0.1);  border: 1px solid rgba(124,58,237,0.2); }
+
+  .card-header-row h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  /* OVERVIEW TEXT */
+  .overview-text {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.75;
+    margin: 0;
+  }
+
+  /* STEP LIST (How it works) */
+  .step-list {
+    list-style: none;
+    padding: 0; margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .step-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    line-height: 1.55;
+  }
+
+  .step-num {
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    background: rgba(37,99,235,0.1);
+    color: #2563eb;
+    border: 1px solid rgba(37,99,235,0.2);
+    font-size: 0.72rem;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* TECH STACK GRID */
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .tech-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .tech-item:hover {
+    border-color: rgba(124,58,237,0.3);
+    background: rgba(124,58,237,0.04);
+  }
+
+  .tech-emoji {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .tech-info { min-width: 0; }
+
+  .tech-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tech-role {
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: block;
+  }
+
+  /* DISCLAIMER */
+  .disclaimer-box {
+    background: rgba(255,159,28,0.06);
+    border: 1px solid rgba(255,159,28,0.22);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .disclaimer-head {
+    background: rgba(255,159,28,0.12);
+    border-bottom: 1px solid rgba(255,159,28,0.18);
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .disclaimer-head i {
+    color: var(--accent);
+    font-size: 1.1rem;
+  }
+
+  .disclaimer-head h5 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0;
+  }
+
+  .disclaimer-body {
+    padding: 1.1rem 1.5rem;
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .disclaimer-body strong {
+    color: var(--text);
+  }
+
+
+  .bar-green  { background: linear-gradient(90deg, #28c878, #5de096); }
+
+  /* 4 CLASSES GRID */
+  .classes-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  @media (max-width: 600px) { .classes-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .class-card {
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid;
+    transition: transform 0.2s;
+  }
+
+  .class-card:hover { transform: translateY(-3px); }
+
+  .class-card .class-icon { font-size: 1.6rem; display: block; margin-bottom: 0.5rem; }
+  .class-card .class-name {
+    font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700;
+    display: block; margin-bottom: 0.2rem;
+  }
+  .class-card .class-desc { font-size: 0.7rem; color: var(--muted); }
+
+  .class-none   { background: rgba(100,149,237,0.07); border-color: rgba(100,149,237,0.22); }
+  .class-none   .class-name { color: #6495ed; }
+  .class-first  { background: rgba(40,200,120,0.07);  border-color: rgba(40,200,120,0.22); }
+  .class-first  .class-name { color: #28c878; }
+  .class-second { background: rgba(255,159,28,0.07);  border-color: rgba(255,159,28,0.22); }
+  .class-second .class-name { color: #ff9f1c; }
+  .class-third  { background: rgba(230,57,70,0.07);   border-color: rgba(230,57,70,0.22); }
+  .class-third  .class-name { color: #e63946; }
+
+  /* CLOUD CARD */
+  .icon-green { background: rgba(40,200,120,0.1); border: 1px solid rgba(40,200,120,0.2); }
+
+  .cloud-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .cloud-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    transition: border-color 0.2s;
+  }
+
+  .cloud-item:hover { border-color: rgba(40,200,120,0.3); }
+
+  .cloud-item i { color: #28c878; font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+
+  .cloud-item p { margin: 0; }
+  .cloud-item strong { display: block; font-size: 0.82rem; color: var(--text); font-weight: 600; margin-bottom: 0.1rem; }
+  .cloud-item span { font-size: 0.75rem; color: var(--muted); }
+
+  /* STAT ROW responsive for 4 items */
+  @media (max-width: 700px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 400px) { .stat-row { grid-template-columns: 1fr; } }
+
+
+</style>
+
+<div class="about-page">
+
+  <!-- HERO -->
+  <div class="about-hero fade-in-up">
+    <div class="page-badge"><i class="bi bi-info-circle-fill"></i> About</div>
+    <h1>About <span class="highlight">BurnAssist AI</span></h1>
+    <p>AI-based skin burn severity detection and emergency support system — built to assist in critical moments.</p>
+  </div>
+
+  <!-- STAT ROW -->
+  <div class="stat-row fade-in-up delay-1">
+    <div class="stat-card">
+      <span class="stat-icon">🔥</span>
+      <span class="stat-value">4</span>
+      <span class="stat-label">Detection Classes</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">🧠</span>
+      <span class="stat-value">VGG16</span>
+      <span class="stat-label">Deep Learning Model</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">⚡</span>
+      <span class="stat-value">Real-time</span>
+      <span class="stat-label">Image Analysis</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">☁️</span>
+      <span class="stat-value">Cloud</span>
+      <span class="stat-label">Deployed &amp; Accessible</span>
+    </div>
+  </div>
+
+  <!-- PROJECT OVERVIEW -->
+  <div class="about-card fade-in-up delay-1">
+    <div class="card-top-bar bar-red"></div>
+    <div class="card-inner">
+      <div class="card-header-row">
+        <div class="card-icon-wrap icon-red"><i class="bi bi-braces-asterisk"></i></div>
+        <h4>Project Overview</h4>
+      </div>
+      <p class="overview-text">
+        <strong style="color:var(--text);">BurnAssist AI</strong> is a web-based application that uses deep learning to analyze burn injury images and determine the severity of the burn. The system classifies burns into <strong style="color:var(--text);">4 categories</strong> — No Burn, 1st Degree, 2nd Degree, and 3rd Degree — and provides immediate first aid recommendations aligned with WHO clinical guidelines and helps users locate nearby medical facilities during emergencies — bringing critical support directly to the user's device when every second counts.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- 4 DETECTION CLASSES -->
+  <div class="about-card fade-in-up delay-1">
+    <div class="card-top-bar bar-red"></div>
+    <div class="card-inner">
+      <div class="card-header-row">
+        <div class="card-icon-wrap icon-red"><i class="bi bi-diagram-3-fill"></i></div>
+        <h4>4 Detection Classes</h4>
+      </div>
+      <div class="classes-grid">
+        <div class="class-card class-none">
+          <span class="class-icon">✅</span>
+          <span class="class-name">No Burn</span>
+          <span class="class-desc">No significant burn detected. Skin appears normal.</span>
+        </div>
+        <div class="class-card class-first">
+          <span class="class-icon">🟢</span>
+          <span class="class-name">1st Degree</span>
+          <span class="class-desc">Superficial burn. Redness, minor swelling, no blisters.</span>
+        </div>
+        <div class="class-card class-second">
+          <span class="class-icon">🟡</span>
+          <span class="class-name">2nd Degree</span>
+          <span class="class-desc">Partial thickness. Blisters, deep redness, intense pain.</span>
+        </div>
+        <div class="class-card class-third">
+          <span class="class-icon">🔴</span>
+          <span class="class-name">3rd Degree</span>
+          <span class="class-desc">Full thickness. White/charred skin. Emergency care required.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="about-card fade-in-up delay-2">
+    <div class="card-top-bar bar-blue"></div>
+    <div class="card-inner">
+      <div class="card-header-row">
+        <div class="card-icon-wrap icon-blue"><i class="bi bi-gear-fill"></i></div>
+        <h4>How It Works</h4>
+      </div>
+      <ul class="step-list">
+        <li><span class="step-num">1</span>User uploads a burn image or captures one via the live camera</li>
+        <li><span class="step-num">2</span>The image is preprocessed and passed to the AI model for inference</li>
+        <li><span class="step-num">3</span>A VGG16 convolutional neural network classifies burn severity (1st, 2nd, or 3rd degree)</li>
+        <li><span class="step-num">4</span>Confidence score is calculated and displayed alongside the classification</li>
+        <li><span class="step-num">5</span>WHO-aligned first aid instructions are shown based on the detected severity</li>
+        <li><span class="step-num">6</span>Nearby hospitals are located using the device's GPS and OpenStreetMap</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- TECH STACK -->
+  <div class="about-card fade-in-up delay-2">
+    <div class="card-top-bar bar-purple"></div>
+    <div class="card-inner">
+      <div class="card-header-row">
+        <div class="card-icon-wrap icon-purple"><i class="bi bi-cpu-fill"></i></div>
+        <h4>Technology Stack</h4>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-item">
+          <span class="tech-emoji">🧠</span>
+          <div class="tech-info">
+            <span class="tech-name">VGG16</span>
+            <span class="tech-role">Deep Learning Model (Transfer Learning)</span>
+          </div>
+        </div>
+        <div class="tech-item">
+          <span class="tech-emoji">⚙️</span>
+          <div class="tech-info">
+            <span class="tech-name">TensorFlow / Keras</span>
+            <span class="tech-role">ML Framework</span>
+          </div>
+        </div>
+        <div class="tech-item">
+          <span class="tech-emoji">🐍</span>
+          <div class="tech-info">
+            <span class="tech-name">Django</span>
+            <span class="tech-role">Backend (Python)</span>
+          </div>
+        </div>
+        <div class="tech-item">
+          <span class="tech-emoji">🎨</span>
+          <div class="tech-info">
+            <span class="tech-name">Bootstrap 5</span>
+            <span class="tech-role">Frontend UI Framework</span>
+          </div>
+        </div>
+        <div class="tech-item">
+          <span class="tech-emoji">🗺️</span>
+          <div class="tech-info">
+            <span class="tech-name">Leaflet.js</span>
+            <span class="tech-role">Interactive Maps</span>
+          </div>
+        </div>
+        <div class="tech-item">
+          <span class="tech-emoji">📍</span>
+          <div class="tech-info">
+            <span class="tech-name">OpenStreetMap</span>
+            <span class="tech-role">Map Tiles & Hospital Data</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- CLOUD DEPLOYMENT -->
+  <div class="about-card fade-in-up delay-3">
+    <div class="card-top-bar bar-green"></div>
+    <div class="card-inner">
+      <div class="card-header-row">
+        <div class="card-icon-wrap icon-green"><i class="bi bi-cloud-check-fill"></i></div>
+        <h4>Cloud Deployment</h4>
+      </div>
+      <p class="overview-text" style="margin-bottom:1.25rem;">
+        BurnAssist AI is deployed on the cloud for fast, reliable access from any device — no installation required. The web app is accessible via any browser on mobile, tablet, or desktop, enabling rapid burn assessment in emergency situations anywhere in the world.
+      </p>
+      <div class="cloud-grid">
+        <div class="cloud-item">
+          <i class="bi bi-globe2"></i>
+          <p>
+            <strong>Accessible Anywhere</strong>
+            <span>Works on any browser — no app download needed</span>
+          </p>
+        </div>
+        <div class="cloud-item">
+          <i class="bi bi-lightning-charge-fill"></i>
+          <p>
+            <strong>Fast Response Time</strong>
+            <span>Cloud infrastructure ensures low-latency AI inference</span>
+          </p>
+        </div>
+        <div class="cloud-item">
+          <i class="bi bi-phone-fill"></i>
+          <p>
+            <strong>Mobile Ready</strong>
+            <span>Fully responsive — works on smartphones at the scene</span>
+          </p>
+        </div>
+        <div class="cloud-item">
+          <i class="bi bi-shield-lock-fill"></i>
+          <p>
+            <strong>Secure</strong>
+            <span>Images processed securely, no permanent storage of personal data</span>
+          </p>
+        </div>
+        <div class="cloud-item">
+          <i class="bi bi-arrow-repeat"></i>
+          <p>
+            <strong>Always Up-to-date</strong>
+            <span>Model and content updates deployed instantly to all users</span>
+          </p>
+        </div>
+        <div class="cloud-item">
+          <i class="bi bi-diagram-3-fill"></i>
+          <p>
+            <strong>Scalable</strong>
+            <span>Handles multiple users simultaneously without slowdown</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer-box fade-in-up delay-3">
+    <div class="disclaimer-head">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <h5>Medical Disclaimer</h5>
+    </div>
+    <p class="disclaimer-body">
+      This application is intended for <strong>educational and informational purposes only</strong>. It does not replace professional medical advice, diagnosis, or treatment. The AI model may not be accurate in all cases. <strong>In case of severe burns, seek immediate medical assistance by calling emergency services.</strong> Never delay seeking professional help based on results from this application.
+    </p>
+  </div>
+
+</div>
+
+{% endblock %}

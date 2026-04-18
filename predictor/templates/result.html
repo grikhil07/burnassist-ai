@@ -1,0 +1,799 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+
+  .result-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 0 3rem;
+  }
+
+  .result-header { text-align: center; margin-bottom: 2rem; }
+
+  .page-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: rgba(230,57,70,0.1); color: var(--primary);
+    border: 1px solid rgba(230,57,70,0.22); border-radius: 50px;
+    padding: 0.32rem 1rem; font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem;
+  }
+
+  .result-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800; color: var(--text); margin-bottom: 0.4rem;
+  }
+
+  .result-header p { color: var(--muted); font-size: 0.92rem; }
+
+  .result-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 22px; overflow: hidden;
+    box-shadow: 0 10px 48px rgba(0,0,0,0.08); margin-bottom: 1.5rem;
+  }
+
+  .image-panel {
+    position: relative; background: #111;
+    max-height: 340px; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .image-panel img { width: 100%; max-height: 340px; object-fit: cover; display: block; }
+
+  .image-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.72));
+    padding: 2rem 1.5rem 1.2rem;
+    display: flex; align-items: flex-end;
+    justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+  }
+
+  .image-label {
+    font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 700;
+    color: rgba(255,255,255,0.7); letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .scan-badge {
+    font-size: 0.72rem; font-weight: 600; padding: 0.25rem 0.75rem;
+    border-radius: 20px; background: rgba(255,255,255,0.15); color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; gap: 0.35rem;
+  }
+
+  .scan-dot { width: 6px; height: 6px; border-radius: 50%; background: #28c878; animation: blink 1.5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  .result-body { padding: 1.75rem 2rem; }
+  @media (max-width: 576px) { .result-body { padding: 1.25rem; } }
+
+  .burn-type-label {
+    font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+  }
+
+  .burn-badge {
+    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800;
+    padding: 0.45rem 1.25rem; border-radius: 12px; display: inline-block; margin-bottom: 1.25rem;
+  }
+
+  .badge-green { background: rgba(40,200,120,0.12);  color: #28c878; border: 1px solid rgba(40,200,120,0.3); }
+  .badge-amber { background: rgba(255,159,28,0.12);  color: #ff9f1c; border: 1px solid rgba(255,159,28,0.3); }
+  .badge-red   { background: rgba(230,57,70,0.12);   color: #e63946; border: 1px solid rgba(230,57,70,0.3); }
+  .badge-blue  { background: rgba(100,149,237,0.12); color: #6495ed; border: 1px solid rgba(100,149,237,0.3); }
+
+  .conf-label-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.78rem; color: var(--muted); font-weight: 500; margin-bottom: 0.4rem;
+  }
+
+  .conf-track { height: 12px; background: var(--bg3); border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; }
+  .conf-fill  { height: 100%; border-radius: 10px; transition: width 1.2s ease; width: 0; }
+
+  .bar-green { background: linear-gradient(90deg, #28c878, #5de096); }
+  .bar-amber { background: linear-gradient(90deg, #ff9f1c, #ffbf5e); }
+  .bar-red   { background: linear-gradient(90deg, #e63946, #ff6b77); }
+  .bar-blue  { background: linear-gradient(90deg, #6495ed, #90b4ff); }
+
+  .inner-divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+  .section-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+
+  .section-head h4 {
+    font-family: 'Syne', sans-serif; font-size: 1.05rem;
+    font-weight: 700; color: var(--text); margin: 0; flex: 1;
+  }
+
+  /* SPEAK BUTTON */
+  .speak-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    font-size: 0.95rem; color: var(--muted); position: relative;
+  }
+
+  .speak-btn:hover { transform: scale(1.1); background: rgba(230,57,70,0.1); border-color: rgba(230,57,70,0.3); color: var(--primary); }
+
+  .speak-btn.speaking {
+    background: rgba(230,57,70,0.15); border-color: var(--primary); color: var(--primary);
+    animation: pulse-red 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse-red { 0%,100%{box-shadow:0 0 0 0 rgba(230,57,70,0.4)} 50%{box-shadow:0 0 0 7px rgba(230,57,70,0)} }
+
+  .speak-btn::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: calc(100% + 6px); left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8); color: #fff;
+    font-size: 0.68rem; font-weight: 600;
+    padding: 0.2rem 0.5rem; border-radius: 6px;
+    white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s;
+  }
+
+  .speak-btn:hover::after { opacity: 1; }
+
+  .firstaid-box { border-radius: 14px; padding: 1.1rem 1.25rem; border: 1px solid; }
+  .box-green { background: rgba(40,200,120,0.06);  border-color: rgba(40,200,120,0.25); }
+  .box-amber { background: rgba(255,159,28,0.06);  border-color: rgba(255,159,28,0.25); }
+  .box-red   { background: rgba(230,57,70,0.06);   border-color: rgba(230,57,70,0.25); }
+  .box-blue  { background: rgba(100,149,237,0.06); border-color: rgba(100,149,237,0.25); }
+
+  .aid-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+
+  .aid-list li { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.88rem; color: var(--text); line-height: 1.5; }
+
+  .aid-num {
+    width: 20px; height: 20px; border-radius: 6px;
+    font-size: 0.68rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+
+  .num-green { background: rgba(40,200,120,0.15);  color: #28c878; }
+  .num-amber { background: rgba(255,159,28,0.15);  color: #ff9f1c; }
+  .num-red   { background: rgba(230,57,70,0.15);   color: #e63946; }
+  .num-blue  { background: rgba(100,149,237,0.15); color: #6495ed; }
+
+  .critical-alert {
+    background: linear-gradient(135deg, #e63946, #b52d38);
+    border-radius: 14px; padding: 1.1rem 1.25rem;
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;
+  }
+
+  .critical-alert i { font-size: 1.8rem; color: #fff; flex-shrink: 0; animation: pulse-icon 1.5s ease-in-out infinite; }
+  @keyframes pulse-icon { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+  .critical-alert h5 { font-family: 'Syne', sans-serif; font-weight: 800; color: #fff; font-size: 1rem; margin-bottom: 0.2rem; }
+  .critical-alert p  { color: rgba(255,255,255,0.82); font-size: 0.82rem; margin: 0; }
+
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-top: 1.5rem; }
+  @media (max-width: 480px) { .action-grid { grid-template-columns: 1fr; } }
+
+  .action-btn {
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.85rem 1rem; border-radius: 13px; border: none;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem;
+    text-decoration: none; cursor: pointer; transition: transform 0.18s, box-shadow 0.18s;
+  }
+
+  .action-btn:hover { transform: translateY(-2px); }
+
+  .btn-emergency {
+    background: linear-gradient(135deg, #e63946, #b52d38);
+    color: #fff; box-shadow: 0 5px 18px rgba(230,57,70,0.3); grid-column: 1 / -1;
+  }
+
+  .btn-emergency:hover { box-shadow: 0 8px 28px rgba(230,57,70,0.45); color: #fff; }
+  .btn-reanalyze { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+  .btn-guide     { background: rgba(40,200,120,0.1); color: #28c878; border: 1px solid rgba(40,200,120,0.2); }
+
+  /* ===== MAP SECTION ===== */
+  .map-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 22px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.07);
+  }
+
+  .map-head {
+    padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 0.75rem;
+  }
+
+  .map-head h4 {
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--text); margin: 0; display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  /* LOCATION BOX */
+  .location-box {
+    padding: 1.1rem 1.75rem; border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 0.85rem; background: var(--bg3);
+  }
+
+  .location-tabs {
+    display: flex; gap: 0.5rem;
+    background: var(--bg2); border-radius: 10px; padding: 4px;
+  }
+
+  .loc-tab {
+    flex: 1; padding: 0.45rem 0.75rem; border: none; border-radius: 8px;
+    font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    background: transparent; color: var(--muted);
+    display: flex; align-items: center; justify-content: center; gap: 0.35rem;
+  }
+
+  .loc-tab.active { background: var(--surface); color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+  .gps-panel, .manual-panel { display: none; }
+  .gps-panel.visible, .manual-panel.visible { display: block; }
+
+  .btn-find {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+    background: linear-gradient(135deg, #e63946, #b52d38);
+    color: #fff; border: none; border-radius: 10px; padding: 0.6rem 1.2rem;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(230,57,70,0.28);
+    transition: transform 0.18s, box-shadow 0.18s; width: 100%;
+  }
+
+  .btn-find:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(230,57,70,0.4); }
+
+  .gps-note {
+    font-size: 0.74rem; color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.35rem; margin-top: 0.4rem; text-align: center;
+  }
+
+  .input-row { display: flex; gap: 0.6rem; }
+
+  .location-input {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.6rem 1rem;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--text);
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .location-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(230,57,70,0.1); }
+  .location-input::placeholder { color: var(--muted); }
+
+  .btn-search {
+    background: linear-gradient(135deg, #e63946, #b52d38);
+    color: #fff; border: none; border-radius: 10px; padding: 0.6rem 1rem;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem;
+    cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 0.4rem;
+    box-shadow: 0 4px 14px rgba(230,57,70,0.28); transition: transform 0.18s;
+  }
+
+  .btn-search:hover { transform: translateY(-2px); }
+
+  .manual-note {
+    font-size: 0.73rem; color: var(--muted); margin-top: 0.35rem;
+    display: flex; align-items: center; gap: 0.3rem;
+  }
+
+  /* HOSPITAL LIST */
+  .hospital-list {
+    padding: 0 1.75rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-height: 280px;
+    overflow-y: auto;
+    display: none;
+  }
+
+  .hospital-list.visible { display: flex; }
+
+  .hospital-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+
+  .hospital-item:hover { border-color: rgba(230,57,70,0.3); transform: translateX(3px); }
+
+  .hospital-info { flex: 1; min-width: 0; }
+
+  .hospital-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.88rem; font-weight: 700; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 0.15rem;
+  }
+
+  .hospital-dist {
+    font-size: 0.74rem; color: var(--muted);
+    display: flex; align-items: center; gap: 0.3rem;
+  }
+
+  .hospital-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+  .btn-directions {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: linear-gradient(135deg, #e63946, #b52d38);
+    color: #fff; border: none; border-radius: 8px;
+    padding: 0.4rem 0.8rem; font-size: 0.75rem; font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 3px 10px rgba(230,57,70,0.25);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-directions:hover { transform: translateY(-1px); color: #fff; box-shadow: 0 5px 14px rgba(230,57,70,0.35); }
+
+  .no-hospitals {
+    text-align: center; padding: 1.5rem;
+    color: var(--muted); font-size: 0.85rem;
+  }
+
+  /* MAP */
+  #map { height: 380px; width: 100%; }
+
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 480px) {
+    .input-row { flex-direction: column; }
+    .btn-search { width: 100%; justify-content: center; }
+    .hospital-list { padding: 0 1rem 1rem; }
+  }
+</style>
+
+<div class="result-page">
+
+  <!-- HEADER -->
+  <div class="result-header fade-in-up">
+    <div class="page-badge"><i class="bi bi-cpu-fill"></i> AI Analysis Complete</div>
+    <h2>Burn Severity Analysis</h2>
+    <p>AI-powered assessment — always consult a licensed medical professional for treatment</p>
+  </div>
+
+  <!-- MAIN CARD -->
+  <div class="result-card fade-in-up delay-1">
+
+    <div class="image-panel">
+      <img src="{{ image_url }}" alt="Analyzed burn image">
+      <div class="image-overlay">
+        <span class="image-label">Analyzed Image</span>
+        <span class="scan-badge"><span class="scan-dot"></span> Scan Complete</span>
+      </div>
+    </div>
+
+    <div class="result-body">
+
+      <p class="burn-type-label">Detected Burn Type</p>
+
+      {% if label == "1st_Degree" %}
+        <span class="burn-badge badge-green">🟢 First-Degree Burn</span>
+      {% elif label == "2nd_Degree" %}
+        <span class="burn-badge badge-amber">🟡 Second-Degree Burn</span>
+      {% elif label == "3rd_Degree" %}
+        <span class="burn-badge badge-red">🔴 Third-Degree Burn</span>
+      {% else %}
+        <span class="burn-badge badge-blue">✅ No Burn Detected</span>
+      {% endif %}
+
+      <div class="conf-label-row">
+        <span>AI Confidence Level</span>
+        <span>{{ confidence }}%</span>
+      </div>
+      <div class="conf-track">
+        {% if label == "1st_Degree" %}
+          <div class="conf-fill bar-green" data-width="{{ confidence }}"></div>
+        {% elif label == "2nd_Degree" %}
+          <div class="conf-fill bar-amber" data-width="{{ confidence }}"></div>
+        {% elif label == "3rd_Degree" %}
+          <div class="conf-fill bar-red" data-width="{{ confidence }}"></div>
+        {% else %}
+          <div class="conf-fill bar-blue" data-width="{{ confidence }}"></div>
+        {% endif %}
+      </div>
+
+      <div class="inner-divider"></div>
+
+      {% if label == "3rd_Degree" %}
+      <div class="critical-alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div>
+          <h5>CRITICAL BURN — Call Emergency Services Now</h5>
+          <p>Third-degree burns are life-threatening. Do NOT apply water, ice, or ointments. Call 112 immediately.</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="section-head">
+        <i class="bi bi-bandaid-fill text-danger fs-5"></i>
+        <h4>Immediate First Aid</h4>
+        <button class="speak-btn" id="speakBtn" data-tooltip="Read First Aid aloud" onclick="speakFirstAid()">
+          <i class="bi bi-volume-up-fill" id="speakIcon"></i>
+        </button>
+      </div>
+
+      {% if label == "1st_Degree" %}
+      <div class="firstaid-box box-green">
+        <ul class="aid-list">
+          <li><span class="aid-num num-green">1</span>Cool under running water for 10–20 minutes immediately</li>
+          <li><span class="aid-num num-green">2</span>Remove rings, watches, or tight items before swelling starts</li>
+          <li><span class="aid-num num-green">3</span>Apply aloe vera gel or soothing moisturiser to relieve discomfort</li>
+          <li><span class="aid-num num-green">4</span>Cover loosely with sterile non-stick gauze if needed</li>
+          <li><span class="aid-num num-green">✕</span>Do NOT apply ice, butter, toothpaste, or oil</li>
+        </ul>
+      </div>
+
+      {% elif label == "2nd_Degree" %}
+      <div class="firstaid-box box-amber">
+        <ul class="aid-list">
+          <li><span class="aid-num num-amber">1</span>Cool immediately with clean running water for at least 20 minutes</li>
+          <li><span class="aid-num num-amber">2</span>Do NOT break or pop blisters — they protect against infection</li>
+          <li><span class="aid-num num-amber">3</span>Cover loosely with sterile non-adhesive dressing or clean cling wrap</li>
+          <li><span class="aid-num num-amber">4</span>Elevate the burned area above heart level to reduce swelling</li>
+          <li><span class="aid-num num-amber">5</span>Seek medical care if burn is larger than 3 cm or on face/hands/joints</li>
+          <li><span class="aid-num num-amber">✕</span>Do NOT use fluffy cotton or adhesive bandages directly on wound</li>
+        </ul>
+      </div>
+
+      {% elif label == "3rd_Degree" %}
+      <div class="firstaid-box box-red">
+        <ul class="aid-list">
+          <li><span class="aid-num num-red">1</span>Call emergency services (112/108) immediately — do not delay</li>
+          <li><span class="aid-num num-red">2</span>Remove the person from danger only if it is safe to do so</li>
+          <li><span class="aid-num num-red">3</span>Cover loosely with a clean dry cloth — do not wrap tightly</li>
+          <li><span class="aid-num num-red">4</span>Keep the person lying down, warm and still to prevent shock</li>
+          <li><span class="aid-num num-red">5</span>Monitor breathing — be ready to perform CPR if needed</li>
+          <li><span class="aid-num num-red">✕</span>Do NOT apply water, ice, cream, or remove clothing stuck to wound</li>
+        </ul>
+      </div>
+
+      {% else %}
+      <div class="firstaid-box box-blue">
+        <ul class="aid-list">
+          <li><span class="aid-num num-blue">✓</span>No significant burn detected in this image</li>
+          <li><span class="aid-num num-blue">✓</span>Apply a gentle moisturiser if any minor irritation is present</li>
+          <li><span class="aid-num num-blue">✓</span>Stay hydrated and avoid further sun exposure if skin appears red</li>
+          <li><span class="aid-num num-blue">i</span>If you believe there is a burn, consult a medical professional</li>
+        </ul>
+      </div>
+      {% endif %}
+
+      <div class="action-grid">
+        <a href="tel:112" class="action-btn btn-emergency">
+          <i class="bi bi-telephone-fill"></i> Call Emergency (112)
+        </a>
+        <a href="{% url 'home' %}" class="action-btn btn-reanalyze">
+          <i class="bi bi-arrow-repeat"></i> Analyze Another
+        </a>
+        <a href="{% url 'guide' %}" class="action-btn btn-guide">
+          <i class="bi bi-journal-medical"></i> Full First Aid Guide
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MAP SECTION -->
+  <div class="map-section fade-in-up delay-2">
+    <div class="map-head">
+      <h4><i class="bi bi-pin-map-fill text-danger"></i> Nearby Hospitals</h4>
+    </div>
+
+    <!-- Location input -->
+    <div class="location-box">
+      <div class="location-tabs">
+        <button class="loc-tab active" id="tabGPS" onclick="switchTab('gps')">
+          <i class="bi bi-crosshair2"></i> Use My Location
+        </button>
+        <button class="loc-tab" id="tabManual" onclick="switchTab('manual')">
+          <i class="bi bi-keyboard"></i> Enter Location
+        </button>
+      </div>
+
+      <div class="gps-panel visible" id="gpsPanel">
+        <button class="btn-find" id="btnFind" onclick="findHospitals()">
+          <i class="bi bi-geo-alt-fill"></i> Find Hospitals Near Me
+        </button>
+        <p class="gps-note"><i class="bi bi-info-circle"></i> Uses Wi-Fi based location — works on laptops without GPS</p>
+      </div>
+
+      <div class="manual-panel" id="manualPanel">
+        <div class="input-row">
+          <input type="text" class="location-input" id="locationInput"
+                 placeholder="e.g. Pollachi, Tamil Nadu"
+                 onkeydown="if(event.key==='Enter') searchLocation()">
+          <button class="btn-search" id="btnSearch" onclick="searchLocation()">
+            <i class="bi bi-search"></i> Search
+          </button>
+        </div>
+        <p class="manual-note">
+          <i class="bi bi-lightbulb-fill text-warning"></i>
+          Type your city or area and press Search to find nearby hospitals
+        </p>
+      </div>
+    </div>
+
+    <!-- Hospital list -->
+    <div class="hospital-list" id="hospitalList"></div>
+
+    <!-- Map — always visible in DOM -->
+    <div id="map"></div>
+  </div>
+
+</div>
+
+<script>
+const severity = "{{ label }}";
+
+/* Confidence bar */
+document.querySelectorAll(".conf-fill").forEach(function(bar) {
+  var w = bar.getAttribute("data-width");
+  setTimeout(function() { bar.style.width = w + "%"; }, 400);
+});
+
+/* ══ AUDIO ══ */
+var speechTexts = {
+  "1st_Degree": "First-Degree Burn detected. Immediate First Aid: Step 1. Cool the burn under running water for 10 to 20 minutes. Step 2. Remove rings, watches, or tight items before swelling starts. Step 3. Apply aloe vera gel or soothing moisturiser. Step 4. Cover loosely with sterile non-stick gauze if needed. Do NOT apply ice, butter, toothpaste, or oil. For more detailed steps, check the Full First Aid Guide available on this page.",
+  "2nd_Degree": "Second-Degree Burn detected. Immediate First Aid: Step 1. Cool immediately with clean running water for at least 20 minutes. Step 2. Do NOT break or pop blisters. Step 3. Cover loosely with sterile non-adhesive dressing. Step 4. Elevate the burned area above heart level. Step 5. Seek medical care if the burn is larger than 3 centimetres or on the face, hands, or joints. Do NOT use fluffy cotton or adhesive bandages. For more detailed steps, check the Full First Aid Guide available on this page.",
+  "3rd_Degree": "WARNING! Third-Degree Burn detected. This is a critical emergency. Step 1. Call emergency services on 112 or 108 immediately. Do not delay. Step 2. Remove the person from danger only if it is safe. Step 3. Cover loosely with a clean dry cloth. Step 4. Keep the person lying down, warm and still. Step 5. Monitor breathing and be ready to give CPR. Do NOT apply water, ice, or remove clothing stuck to the wound. For more detailed emergency steps, check the Full First Aid Guide on this page.",
+  "No_Sunburn": "No significant burn detected. Apply a gentle moisturiser if any minor irritation is present. Stay hydrated and avoid further sun exposure. If you believe there is a burn, consult a medical professional. For more information, check the Full First Aid Guide on this page."
+};
+
+var isSpeaking = false;
+
+function speakFirstAid() {
+  var btn  = document.getElementById('speakBtn');
+  var icon = document.getElementById('speakIcon');
+
+  if (!window.speechSynthesis) {
+    alert('Text-to-speech not supported. Please use Chrome or Edge.');
+    return;
+  }
+
+  if (isSpeaking) {
+    window.speechSynthesis.cancel();
+    isSpeaking = false;
+    btn.classList.remove('speaking');
+    btn.setAttribute('data-tooltip', 'Read First Aid aloud');
+    return;
+  }
+
+  var text = speechTexts[severity] || speechTexts["No_Sunburn"];
+  var utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US'; utterance.rate = 0.92; utterance.pitch = 1;
+
+  utterance.onstart = function() {
+    isSpeaking = true;
+    btn.classList.add('speaking');
+    btn.setAttribute('data-tooltip', 'Click to stop');
+  };
+
+  utterance.onend = utterance.onerror = function() {
+    isSpeaking = false;
+    btn.classList.remove('speaking');
+    btn.setAttribute('data-tooltip', 'Read First Aid aloud');
+  };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+window.addEventListener('beforeunload', function() {
+  if (window.speechSynthesis && window.speechSynthesis.speaking) window.speechSynthesis.cancel();
+});
+
+/* ══ MAP ══ */
+function switchTab(tab) {
+  document.getElementById('tabGPS').classList.toggle('active', tab === 'gps');
+  document.getElementById('tabManual').classList.toggle('active', tab === 'manual');
+  document.getElementById('gpsPanel').classList.toggle('visible', tab === 'gps');
+  document.getElementById('manualPanel').classList.toggle('visible', tab === 'manual');
+}
+
+var leafletMap = null;
+var userLat = null, userLon = null;
+
+function initMap(lat, lon) {
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+  leafletMap = L.map('map').setView([lat, lon], 14);
+
+  /* ── FIX: CartoDB Positron tiles — no referer required, free, works on localhost ── */
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(leafletMap);
+
+  return leafletMap;
+}
+
+function getDistance(lat1, lon1, lat2, lon2) {
+  var R = 6371;
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLon = (lon2 - lon1) * Math.PI / 180;
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function renderHospitalList(hospitals, originLat, originLon) {
+  var list = document.getElementById('hospitalList');
+  list.innerHTML = '';
+
+  if (hospitals.length === 0) {
+    list.innerHTML = '<div class="no-hospitals"><i class="bi bi-hospital" style="font-size:1.5rem;opacity:0.3;display:block;margin-bottom:0.5rem;"></i>No hospitals found in this area. Try expanding your search.</div>';
+    list.classList.add('visible');
+    return;
+  }
+
+  /* Sort by distance */
+  hospitals.sort(function(a, b) {
+    return getDistance(originLat, originLon, a.lat, a.lon) - getDistance(originLat, originLon, b.lat, b.lon);
+  });
+
+  /* Show max 8 nearest */
+  hospitals.slice(0, 8).forEach(function(h) {
+    var dist = getDistance(originLat, originLon, h.lat, h.lon);
+    var distStr = dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km';
+    var gmapsUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + originLat + ',' + originLon + '&destination=' + h.lat + ',' + h.lon + '&travelmode=driving';
+    var gmapsSearch = 'https://www.google.com/maps/search/hospitals/@' + h.lat + ',' + h.lon + ',17z';
+
+    var item = document.createElement('div');
+    item.className = 'hospital-item';
+    item.innerHTML =
+      '<div class="hospital-info">' +
+        '<div class="hospital-name">🏥 ' + h.name + '</div>' +
+        '<div class="hospital-dist"><i class="bi bi-geo-alt-fill text-danger"></i>' + distStr + ' away</div>' +
+      '</div>' +
+      '<div class="hospital-actions">' +
+        '<a href="' + gmapsUrl + '" target="_blank" class="btn-directions">' +
+          '<i class="bi bi-map-fill"></i> Directions' +
+        '</a>' +
+      '</div>';
+
+    /* Click anywhere on item → open in Google Maps */
+    item.style.cursor = 'pointer';
+    item.addEventListener('click', function(e) {
+      if (e.target.closest('.btn-directions')) return;
+      window.open(gmapsSearch, '_blank');
+    });
+
+    list.appendChild(item);
+  });
+
+  list.classList.add('visible');
+}
+
+function loadHospitals(lat, lon, map) {
+  userLat = lat; userLon = lon;
+
+  /* User marker */
+  L.marker([lat, lon], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div style="background:#e63946;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px rgba(230,57,70,0.4);"></div>',
+      iconSize: [14,14], iconAnchor: [7,7]
+    })
+  }).addTo(map).bindPopup('<b>📍 You are here</b>').openPopup();
+
+  /* Overpass query — 10km radius, hospitals + clinics */
+  var query = '[out:json][timeout:25];(node["amenity"~"hospital|clinic"](around:10000,' + lat + ',' + lon + ');way["amenity"~"hospital|clinic"](around:10000,' + lat + ',' + lon + '););out center;';
+
+  fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: query })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var hospitals = data.elements.map(function(el) {
+        return {
+          lat:  el.lat || el.center.lat,
+          lon:  el.lon || el.center.lon,
+          name: (el.tags && el.tags.name) ? el.tags.name : 'Hospital / Clinic'
+        };
+      });
+
+      renderHospitalList(hospitals, lat, lon);
+
+      /* Add markers to map */
+      hospitals.slice(0, 8).forEach(function(h) {
+        var gmapsUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + lat + ',' + lon + '&destination=' + h.lat + ',' + h.lon + '&travelmode=driving';
+        var dist = getDistance(lat, lon, h.lat, h.lon);
+        var distStr = dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km';
+
+        L.marker([h.lat, h.lon], {
+          icon: L.divIcon({
+            className: '',
+            html: '<div style="background:#fff;border:2px solid #e63946;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 3px 10px rgba(0,0,0,0.2);">🏥</div>',
+            iconSize: [28,28], iconAnchor: [14,14]
+          })
+        }).addTo(map).bindPopup(
+          '<div style="font-family:sans-serif;min-width:170px;">' +
+          '<b style="font-size:0.88rem;">' + h.name + '</b>' +
+          '<div style="font-size:0.75rem;color:#888;margin:0.2rem 0;">' + distStr + ' away</div>' +
+          '<a href="' + gmapsUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:4px;background:#e63946;color:#fff;padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;text-decoration:none;margin-top:4px;">' +
+          '🗺 Get Directions</a></div>'
+        );
+      });
+
+      if (severity === "3rd_Degree") { alert("🚑 CRITICAL: Seek immediate medical help!"); }
+      else if (severity === "2nd_Degree") { alert("⚠️ Moderate burn — medical care recommended."); }
+    })
+    .catch(function() {
+      /* Fallback: open Google Maps hospitals search */
+      document.getElementById('hospitalList').innerHTML =
+        '<div class="no-hospitals">Could not load hospital data automatically.<br>' +
+        '<a href="https://www.google.com/maps/search/hospitals+near+me/@' + lat + ',' + lon + ',14z" target="_blank" style="color:#e63946;font-weight:600;">Open Hospitals in Google Maps →</a></div>';
+      document.getElementById('hospitalList').classList.add('visible');
+    });
+}
+
+/* GPS */
+function findHospitals() {
+  if (!navigator.geolocation) {
+    alert('Geolocation not supported. Please use the Enter Location tab.');
+    switchTab('manual');
+    return;
+  }
+  var btn = document.getElementById('btnFind');
+  btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Locating…';
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Located';
+      loadHospitals(pos.coords.latitude, pos.coords.longitude, initMap(pos.coords.latitude, pos.coords.longitude));
+    },
+    function(err) {
+      btn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Find Hospitals Near Me';
+      btn.disabled = false;
+      var msgs = {
+        1: 'Location permission denied.\n\nAllow location in browser settings, or use the Enter Location tab.',
+        2: 'Location unavailable (common on laptops without GPS).\n\nUse the Enter Location tab to type your city.',
+        3: 'Location request timed out.\n\nPlease try again or use the Enter Location tab.'
+      };
+      alert(msgs[err.code] || 'Location error. Please use the Enter Location tab.');
+      switchTab('manual');
+      document.getElementById('locationInput').focus();
+    },
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+/* Manual search */
+function searchLocation() {
+  var input = document.getElementById('locationInput').value.trim();
+  if (!input) { alert('Please enter a city or location name.'); return; }
+
+  var btn = document.getElementById('btnSearch');
+  btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+  btn.disabled = true;
+
+  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(input) + '&limit=1', {
+    headers: { 'Accept-Language': 'en', 'User-Agent': 'BurnAssistAI/1.0' }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    btn.innerHTML = '<i class="bi bi-search"></i> Search';
+    btn.disabled = false;
+    if (!data || data.length === 0) {
+      alert('Location "' + input + '" not found. Try a more specific name, e.g. "Pollachi, Tamil Nadu, India".');
+      return;
+    }
+    var lat = parseFloat(data[0].lat);
+    var lon = parseFloat(data[0].lon);
+    loadHospitals(lat, lon, initMap(lat, lon));
+  })
+  .catch(function() {
+    btn.innerHTML = '<i class="bi bi-search"></i> Search';
+    btn.disabled = false;
+    alert('Search failed. Check your internet connection and try again.');
+  });
+}
+</script>
+
+{% endblock %}
