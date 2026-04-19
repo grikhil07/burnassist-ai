@@ -28,7 +28,16 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['https://52.21.4.126']
+CSRF_TRUSTED_ORIGINS = [
+    'https://52.21.4.126',
+    'https://burnassistai.online',
+    'https://www.burnassistai.online'
+]
+
+# Security headers for HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 
 # Application definition

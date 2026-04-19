@@ -3,6 +3,7 @@ services:
     build: .
     container_name: burn_app
     volumes:
+      - .:/app
       - ./media:/app/media
       - ./db.sqlite3:/app/db.sqlite3
     environment:
@@ -19,6 +20,7 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./media:/app/media
       - ./certs:/etc/nginx/certs
+      - /etc/letsencrypt:/etc/letsencrypt
     ports:
       - "80:80"
       - "443:443"
