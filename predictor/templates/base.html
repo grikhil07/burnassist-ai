@@ -404,15 +404,30 @@
 <!-- Dark / Light Mode Script -->
 <script>
   const themeIcon = document.getElementById('themeIcon');
+  const body = document.body;
 
-  // Default: light mode — toggle adds dark-mode class
-  function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    if (document.body.classList.contains('dark-mode')) {
-      themeIcon.className = 'bi bi-sun-fill';
+  // 1. Function to apply theme based on icon/class
+  function applyTheme(isDark) {
+    if (isDark) {
+      body.classList.add('dark-mode');
+      if (themeIcon) themeIcon.className = 'bi bi-sun-fill';
     } else {
-      themeIcon.className = 'bi bi-moon-stars-fill';
+      body.classList.remove('dark-mode');
+      if (themeIcon) themeIcon.className = 'bi bi-moon-stars-fill';
     }
+  }
+
+  // 2. Load theme immediately on page load
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    applyTheme(true);
+  }
+
+  // 3. Toggle function
+  function toggleDarkMode() {
+    const isDark = body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    applyTheme(isDark);
   }
 </script>
 
